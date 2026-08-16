@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for razorpay-rs development, testing, and CI
-FROM rust:1.80-slim-bullseye AS builder
+FROM rust:slim-bookworm AS builder
 
 WORKDIR /app
 
