@@ -113,6 +113,37 @@ impl Payments {
             .get::<PaymentDowntime, ()>(&path, None, extra_headers)
             .await
     }
+
+    /// Generate OTP for an OTP-eligible payment (`POST /v1/payments/{payment_id}/otp/generate`).
+    pub async fn otp_generate(
+        &self,
+        payment_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("payments/{}/otp_generate", payment_id);
+        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+    }
+
+    /// Resend OTP for a payment (`POST /v1/payments/{payment_id}/otp/resend`).
+    pub async fn otp_resend(
+        &self,
+        payment_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("payments/{}/otp_resend", payment_id);
+        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+    }
+
+    /// Submit OTP for a payment (`POST /v1/payments/{payment_id}/otp/submit`).
+    pub async fn otp_submit<T: serde::Serialize + Sync>(
+        &self,
+        payment_id: &str,
+        data: &T,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("payments/{}/otp_submit", payment_id);
+        self.http.post(&path, data, extra_headers).await
+    }
 }
 
 #[async_trait]

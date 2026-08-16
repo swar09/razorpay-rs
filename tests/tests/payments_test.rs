@@ -343,3 +343,39 @@ async fn test_payments_downtime() {
     assert_eq!(downtime.id, "down_123");
     assert_eq!(downtime.severity, "high");
 }
+
+#[tokio::test]
+async fn test_payments_otp_and_transfers() {
+    let mock_server = MockServer::start().await;
+    let client = create_test_client(&mock_server.uri()).await;
+
+    // 1. OTP Generate
+    Mock::given(method("POST"))
+        .and(path("/payments/pay_123/otp_generate"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"status": "otp_sent"})))
+        .mount(&mock_server)
+        .await;
+
+    let gen_res = client
+        .payments()
+        .otp_generate("pay_123", None)
+        .await
+        .expect("OTP generate should succeed");
+    assert_eq!(gen_res["status"], "otp_sent");
+
+    // 2. OTP Submit
+    Mock::given(method("POST"))
+        .and(path("/payments/pay_123/otp_submit"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"status": "authenticated"})))
+        .mount(&mock_server)
+        .await;
+
+    let sub_res = client
+        .payments()
+        .otp_submit("pay_123", &serde_json::json!({"otp": "123456"}), None)
+        .await
+        .expect("OTP submit should succeed");
+    assert_eq!(sub_res["status"], "authenticated");
+}

@@ -1430,3 +1430,68 @@ pub struct CreatePayoutRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<Notes>,
 }
+
+// Cards & IINs  https://razorpay.com/docs/api/payments/cards/entity
+
+/// Razorpay Card entity (`entity: "card"`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Card {
+    pub id: String,
+    pub entity: String,
+    pub name: Option<String>,
+    pub last4: String,
+    pub network: String,
+    #[serde(rename = "type")]
+    pub card_type: Option<String>,
+    pub sub_type: Option<String>,
+    pub issuer: Option<String>,
+    pub international: Option<bool>,
+    pub emi: Option<bool>,
+    pub expiry_month: Option<u8>,
+    pub expiry_year: Option<u16>,
+}
+
+/// Razorpay Issuer Identification Number (IIN) entity (`entity: "iin"`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Iin {
+    pub iin: String,
+    pub entity: Option<String>,
+    pub network: Option<String>,
+    #[serde(rename = "type")]
+    pub card_type: Option<String>,
+    pub sub_type: Option<String>,
+    pub issuer_code: Option<String>,
+    pub issuer_name: Option<String>,
+    pub international: Option<bool>,
+    pub is_tokenized: Option<bool>,
+    pub recurring: Option<bool>,
+}
+
+// Products (Linked Account Configuration - v2)
+// https://razorpay.com/docs/api/payments/route/product-configuration
+
+/// Razorpay Linked Account Product configuration entity.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ProductConfiguration {
+    pub id: Option<String>,
+    pub account_id: Option<String>,
+    pub product_name: Option<String>,
+    pub status: Option<String>,
+    pub configuration: Option<serde_json::Value>,
+    pub requirements: Option<serde_json::Value>,
+}
+
+/// Terms and Conditions response (`GET /v2/products/{product_name}/tnc`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TncResponse {
+    pub entity: Option<String>,
+    pub product_name: Option<String>,
+    pub tnc: Option<serde_json::Value>,
+    pub last_updated_at: Option<u64>,
+}
+
+/// OTP submission request payload for payments.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct OtpSubmitRequest {
+    pub otp: String,
+}

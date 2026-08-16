@@ -134,6 +134,21 @@ impl RazorpayClient {
     pub fn documents(&self) -> crate::resources::documents::Documents {
         crate::resources::documents::Documents::new(Arc::clone(&self.http))
     }
+
+    /// Access Cards resource operations (`/v1/cards`).
+    pub fn cards(&self) -> crate::resources::cards::Cards {
+        crate::resources::cards::Cards::new(Arc::clone(&self.http))
+    }
+
+    /// Access Issuer Identification Numbers (IINs) operations (`/v1/iins`).
+    pub fn iins(&self) -> crate::resources::iins::Iins {
+        crate::resources::iins::Iins::new(Arc::clone(&self.http))
+    }
+
+    /// Access Linked Account Products operations (`/v2/accounts/{id}/products`).
+    pub fn products(&self) -> crate::resources::products::Products {
+        crate::resources::products::Products::new(Arc::clone(&self.http))
+    }
 }
 
 /// Builder for constructing a configured [`RazorpayClient`].
