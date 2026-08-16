@@ -1,0 +1,12 @@
+[alias]
+# Run live API integration tests against api.razorpay.com with .env credentials
+test-live = "test -p razorpay-tests --test live_test -- --ignored --nocapture"
+
+# Run all local offline unit and mock integration tests
+test-unit = "test --workspace"
+
+# Run full project checks
+check-all = "check --workspace --all-targets"
+
+# Run strict clippy linter across workspace
+lint = "clippy --workspace --all-targets -- -D warnings"

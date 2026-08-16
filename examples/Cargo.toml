@@ -1,0 +1,10 @@
+[package]
+name = "razorpay-examples"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+dotenvy = "0.15.7"
+razorpay = { path = "../razorpay" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

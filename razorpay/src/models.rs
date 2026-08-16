@@ -18,7 +18,85 @@ pub struct RazorpayList<T> {
 }
 
 /// Notes object — arbitrary key-value pairs attached to any entity.
-pub type Notes = HashMap<String, String>;
+/// Handles both map (`{"k": "v"}`) and empty array (`[]`) representations returned by the API.
+#[derive(Debug, Clone, Serialize, Default, PartialEq, Eq)]
+pub struct Notes(pub HashMap<String, String>);
+
+impl std::ops::Deref for Notes {
+    type Target = HashMap<String, String>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for Notes {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl From<HashMap<String, String>> for Notes {
+    fn from(map: HashMap<String, String>) -> Self {
+        Notes(map)
+    }
+}
+
+impl From<Notes> for HashMap<String, String> {
+    fn from(notes: Notes) -> Self {
+        notes.0
+    }
+}
+
+impl<K: Into<String>, V: Into<String>> FromIterator<(K, V)> for Notes {
+    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
+        let mut map = HashMap::new();
+        for (k, v) in iter {
+            map.insert(k.into(), v.into());
+        }
+        Notes(map)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Notes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct NotesVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for NotesVisitor {
+            type Value = Notes;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a key-value map or an empty array")
+            }
+
+            fn visit_seq<A>(self, mut _seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                Ok(Notes(HashMap::new()))
+            }
+
+            fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
+            where
+                M: serde::de::MapAccess<'de>,
+            {
+                let mut notes = HashMap::new();
+                while let Some((k, v)) = map.next_entry::<String, serde_json::Value>()? {
+                    let val_str = match v {
+                        serde_json::Value::String(s) => s,
+                        other => other.to_string(),
+                    };
+                    notes.insert(k, val_str);
+                }
+                Ok(Notes(notes))
+            }
+        }
+
+        deserializer.deserialize_any(NotesVisitor)
+    }
+}
 
 /// Generic Razorpay API error response body.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -73,8 +151,10 @@ pub struct Order {
     pub entity: String,
     /// Amount in smallest currency sub-unit (paise for INR).
     pub amount: u64,
-    pub amount_paid: u64,
-    pub amount_due: u64,
+    #[serde(default)]
+    pub amount_paid: Option<u64>,
+    #[serde(default)]
+    pub amount_due: Option<u64>,
     pub currency: String,
     pub receipt: Option<String>,
     pub offer_id: Option<String>,
@@ -276,6 +356,9 @@ pub struct Refund {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CreateRefundRequest {
+    /// Payment ID (required when creating via standalone POST /v1/refunds).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payment_id: Option<String>,
     /// Amount to refund in paise. Omit for a full refund.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub amount: Option<u64>,
@@ -415,18 +498,62 @@ pub struct CreateCustomerRequest {
     pub notes: Option<Notes>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EditCustomerRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contact: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gstin: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Notes>,
+}
+
+/// Razorpay Token entity for customer saved instruments.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Token {
+    pub id: String,
+    pub entity: String,
+    pub customer_id: Option<String>,
+    pub token: Option<String>,
+    pub method: Option<String>,
+    pub card: Option<CardDetails>,
+    pub bank: Option<String>,
+    pub wallet: Option<String>,
+    pub vpa: Option<UpiInfo>,
+    pub recurring: Option<bool>,
+    pub auth_type: Option<String>,
+    pub max_amount: Option<u64>,
+    pub status: Option<String>,
+    pub created_at: u64,
+}
+
+/// Generic delete response returned by Razorpay entity deletion endpoints.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DeleteResponse {
+    pub deleted: bool,
+}
+
 // Payment Links  https://razorpay.com/docs/api/payments/payment-links/entity
 
 /// Payment Link entity (`entity: "payment_link"`).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PaymentLink {
     pub id: String,
-    pub entity: String,
+    #[serde(default)]
+    pub entity: Option<String>,
+    #[serde(default)]
     pub accept_partial: bool,
     pub amount: u64,
+    #[serde(default)]
     pub amount_paid: u64,
     pub cancelled_at: Option<u64>,
+    #[serde(default)]
     pub created_at: u64,
+    #[serde(default)]
     pub currency: String,
     pub customer_id: Option<String>,
     pub description: Option<String>,
@@ -437,10 +564,15 @@ pub struct PaymentLink {
     pub notify: Option<PaymentLinkNotify>,
     pub payments: Option<Vec<PaymentLinkPayment>>,
     pub reference_id: Option<String>,
+    #[serde(default)]
     pub reminder_enable: bool,
+    #[serde(default)]
     pub short_url: String,
+    #[serde(default)]
     pub status: String,
+    #[serde(default)]
     pub updated_at: u64,
+    #[serde(default)]
     pub upi_link: bool,
     pub user_id: Option<String>,
     pub callback_url: Option<String>,
@@ -499,6 +631,28 @@ pub struct CreatePaymentLinkRequest {
     pub callback_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub callback_method: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EditPaymentLinkRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accept_partial: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expire_by: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reference_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Notes>,
+}
+
+/// Notification medium for Payment Links and Invoices.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NotifyMedium {
+    Sms,
+    Email,
 }
 
 // QR Codes  https://razorpay.com/docs/api/qr-codes/entity
@@ -628,6 +782,42 @@ pub struct Invoice {
     pub created_at: u64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CreateInvoiceRequest {
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub invoice_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer: Option<InvoiceCustomerDetails>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_items: Option<Vec<InvoiceLineItem>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expire_by: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sms_notify: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email_notify: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub partial_payment: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub currency: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Notes>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EditInvoiceRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expire_by: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Notes>,
+}
+
 // Items  https://razorpay.com/docs/api/payments/invoices/item-entity
 
 /// Razorpay Item entity (`entity: "item"`).
@@ -698,6 +888,7 @@ pub struct CreatePlanRequest {
     pub period: PlanPeriod,
     pub interval: u32,
     pub item: CreatePlanItem,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<Notes>,
 }
 
@@ -706,6 +897,7 @@ pub struct CreatePlanItem {
     pub name: String,
     pub amount: u64,
     pub currency: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
@@ -769,14 +961,59 @@ pub struct SubscriptionNotifyInfo {
 pub struct CreateSubscriptionRequest {
     pub plan_id: String,
     pub total_count: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub quantity: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub start_at: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub expire_by: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub customer_notify: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub addons: Option<Vec<SubscriptionAddon>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub offer_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<Notes>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub notify_info: Option<SubscriptionNotifyInfo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UpdateSubscriptionRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plan_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quantity: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remaining_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start_at: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub schedule_change_at: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer_notify: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offer_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Notes>,
+}
+
+/// Razorpay Addon entity (`entity: "addon"`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Addon {
+    pub id: String,
+    pub entity: String,
+    pub item: PlanItem,
+    pub subscription_id: Option<String>,
+    pub invoice_id: Option<String>,
+    pub created_at: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CreateAddonRequest {
+    pub item: CreatePlanItem,
+    pub quantity: Option<u32>,
 }
 
 // Disputes  https://razorpay.com/docs/api/disputes/entity
