@@ -1495,3 +1495,62 @@ pub struct TncResponse {
 pub struct OtpSubmitRequest {
     pub otp: String,
 }
+
+// ============================================================================
+// Bills API Models
+// https://razorpay.com/docs/api/payments/bills
+// ============================================================================
+
+/// Razorpay Bill entity (`id: "bill_xxxx"`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Bill {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub business_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub business_category: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loyalty: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub store_code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_timestamp: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_number: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_delivery: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bar_code_number: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qr_code_number: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub billing_pos_number: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pos_category: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order_number: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order_service_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub delivery_status_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_items: Option<Vec<serde_json::Value>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_summary: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub taxes: Option<Vec<serde_json::Value>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payments: Option<Vec<serde_json::Value>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub event: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<u64>,
+}

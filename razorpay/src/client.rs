@@ -149,6 +149,11 @@ impl RazorpayClient {
     pub fn products(&self) -> crate::resources::products::Products {
         crate::resources::products::Products::new(Arc::clone(&self.http))
     }
+
+    /// Access Bills resource operations (`/v1/bills`).
+    pub fn bills(&self) -> crate::resources::bills::Bills {
+        crate::resources::bills::Bills::new(Arc::clone(&self.http))
+    }
 }
 
 /// Builder for constructing a configured [`RazorpayClient`].

@@ -443,3 +443,152 @@ async fn test_live_payments_and_invoices_listing() {
         );
     }
 }
+
+#[tokio::test]
+#[ignore = "Live API test against api.razorpay.com. Run with: cargo test-live"]
+async fn test_live_refunds_and_virtual_accounts_listing() {
+    let client = match get_live_client() {
+        Some(c) => c,
+        None => return,
+    };
+
+    // List refunds
+    println!("Executing live Refunds::all against Razorpay API...");
+    let refunds = client
+        .refunds()
+        .all(
+            Some(ListOptions {
+                count: Some(5),
+                skip: None,
+                from: None,
+                to: None,
+            }),
+            None,
+        )
+        .await
+        .expect("Live refunds list should succeed");
+    println!("Live Refunds count: {}", refunds.count);
+
+    // List virtual accounts
+    println!("Executing live VirtualAccounts::all against Razorpay API...");
+    match client
+        .virtual_accounts()
+        .all(
+            Some(ListOptions {
+                count: Some(5),
+                skip: None,
+                from: None,
+                to: None,
+            }),
+            None,
+        )
+        .await
+    {
+        Ok(vas) => println!("Live Virtual Accounts count: {}", vas.count),
+        Err(e) => println!(
+            "VirtualAccounts::all response (Smart Collect may require dashboard activation): {:?}",
+            e
+        ),
+    }
+
+    // List disputes
+    println!("Executing live Disputes::all against Razorpay API...");
+    match client
+        .disputes()
+        .all(
+            Some(ListOptions {
+                count: Some(5),
+                skip: None,
+                from: None,
+                to: None,
+            }),
+            None,
+        )
+        .await
+    {
+        Ok(disputes) => println!("Live Disputes count: {}", disputes.count),
+        Err(e) => println!("Disputes::all response: {:?}", e),
+    }
+
+    // List IINs
+    println!("Executing live Iins::all against Razorpay API...");
+    match client.iins().all(None, None).await {
+        Ok(iins) => println!("Live IINs response count: {}", iins.count),
+        Err(e) => println!("Iins::all response: {:?}", e),
+    }
+}
+
+#[tokio::test]
+#[ignore = "Live API test against api.razorpay.com. Run with: cargo test-live"]
+async fn test_live_bills_flow() {
+    let client = match get_live_client() {
+        Some(c) => c,
+        None => return,
+    };
+
+    println!("Executing live Bills::create against Razorpay API...");
+    let unique_timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    let bill_payload = serde_json::json!({
+        "store_code": "JK-001",
+        "business_type": "retail",
+        "business_category": "retail_and_consumer_goods",
+        "customer": {
+            "contact": "9876543210",
+            "name": "Gaurav Kumar"
+        },
+        "order_service_type": "dine_in",
+        "order_number": format!("ORD{}", unique_timestamp % 10000),
+        "receipt_timestamp": unique_timestamp,
+        "receipt_number": format!("INV{}", unique_timestamp),
+        "receipt_type": "tax_invoice",
+        "receipt_delivery": "digital",
+        "receipt_summary": {
+            "total_quantity": 1,
+            "sub_total_amount": 10000,
+            "currency": "INR",
+            "net_payable_amount": 10000,
+            "payment_status": "success",
+            "total_tax_amount": 0,
+            "total_tax_percent": 0
+        },
+        "line_items": [
+            {
+                "name": "Live Soap",
+                "quantity": 1,
+                "unit_amount": 10000,
+                "unit": "pc",
+                "total_amount": 10000
+            }
+        ],
+        "payments": [
+            {
+                "method": "paytm",
+                "currency": "INR",
+                "amount": 10000
+            }
+        ]
+    });
+
+    match client.bills().create(bill_payload, None).await {
+        Ok(bill) => {
+            println!("Live Bill Created with ID: {}", bill.id);
+            assert!(!bill.id.is_empty());
+
+            // Fetch Bill
+            if let Ok(fetched) = client.bills().fetch(&bill.id, None).await {
+                println!("Live Bill Fetched: {}", fetched.id);
+                assert_eq!(fetched.id, bill.id);
+            }
+        }
+        Err(e) => {
+            println!(
+                "Bills::create live response (Feature may require retail merchant activation): {:?}",
+                e
+            );
+        }
+    }
+}

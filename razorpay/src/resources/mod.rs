@@ -1,5 +1,6 @@
 pub mod accounts;
 pub mod addons;
+pub mod bills;
 pub mod cards;
 pub mod customers;
 pub mod disputes;
@@ -25,6 +26,7 @@ pub mod virtual_accounts;
 
 pub use accounts::Accounts;
 pub use addons::Addons;
+pub use bills::Bills;
 pub use cards::Cards;
 pub use customers::{CustomerTokens, Customers};
 pub use disputes::Disputes;
