@@ -26,7 +26,9 @@ impl Iins {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Iin>> {
-        self.http.get("iins/list", query.as_ref(), extra_headers).await
+        self.http
+            .get("iins/list", query.as_ref(), extra_headers)
+            .await
     }
 }
 

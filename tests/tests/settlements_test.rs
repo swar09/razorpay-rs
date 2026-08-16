@@ -1,15 +1,15 @@
 use razorpay::{
+    Fetchable, Listable, RazorpayClientBuilder,
     models::{
         CreateInstantSettlementRequest, InstantSettlement, RazorpayList, Settlement,
         SettlementReconItem,
     },
-    Fetchable, Listable, RazorpayClientBuilder,
 };
 use std::time::Duration;
 use url::Url;
 use wiremock::{
-    matchers::{basic_auth, body_json, method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{basic_auth, body_json, method, path},
 };
 
 async fn create_test_client(server_uri: &str) -> razorpay::RazorpayClient {

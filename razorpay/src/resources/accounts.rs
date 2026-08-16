@@ -52,9 +52,15 @@ impl Fetchable for Accounts {
     type Item = LinkedAccount;
 
     /// Fetch a linked account by ID (`GET /v2/accounts/{account_id}`).
-    async fn fetch(&self, account_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        account_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("../v2/accounts/{}", account_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -63,7 +69,11 @@ impl Deletable for Accounts {
     type Response = DeleteResponse;
 
     /// Delete a linked account (`DELETE /v2/accounts/{account_id}`).
-    async fn delete(&self, account_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn delete(
+        &self,
+        account_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         let path = format!("../v2/accounts/{}", account_id);
         self.http.delete(&path, extra_headers).await
     }

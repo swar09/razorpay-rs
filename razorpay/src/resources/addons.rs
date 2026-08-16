@@ -26,9 +26,15 @@ impl Fetchable for Addons {
     type Item = Addon;
 
     /// Fetch an addon by ID (`GET /v1/addons/{addon_id}`).
-    async fn fetch(&self, addon_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        addon_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("addons/{}", addon_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -51,7 +57,11 @@ impl Deletable for Addons {
     type Response = DeleteResponse;
 
     /// Delete an addon (`DELETE /v1/addons/{addon_id}`).
-    async fn delete(&self, addon_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn delete(
+        &self,
+        addon_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         let path = format!("addons/{}", addon_id);
         self.http.delete(&path, extra_headers).await
     }

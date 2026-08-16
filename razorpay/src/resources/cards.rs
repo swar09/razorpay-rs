@@ -2,12 +2,7 @@ use async_trait::async_trait;
 use reqwest::header::HeaderMap;
 use std::sync::Arc;
 
-use crate::{
-    error::RazorpayResult,
-    http::Http,
-    models::Card,
-    traits::Fetchable,
-};
+use crate::{error::RazorpayResult, http::Http, models::Card, traits::Fetchable};
 
 /// Resource handle for Razorpay Cards API endpoints (`/v1/cards`).
 #[derive(Debug, Clone)]
@@ -26,7 +21,9 @@ impl Cards {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<serde_json::Value> {
-        self.http.post("cards/fingerprints", data, extra_headers).await
+        self.http
+            .post("cards/fingerprints", data, extra_headers)
+            .await
     }
 }
 

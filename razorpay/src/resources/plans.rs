@@ -27,7 +27,11 @@ impl Creatable for Plans {
     type Response = Plan;
 
     /// Create a recurring billing plan (`POST /v1/plans`).
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         self.http.post("plans", &data, extra_headers).await
     }
 }
@@ -37,9 +41,15 @@ impl Fetchable for Plans {
     type Item = Plan;
 
     /// Fetch a plan by ID (`GET /v1/plans/{plan_id}`).
-    async fn fetch(&self, plan_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        plan_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("plans/{}", plan_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 

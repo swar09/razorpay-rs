@@ -52,7 +52,11 @@ impl Creatable for Transfers {
     type Response = Transfer;
 
     /// Create a direct transfer (`POST /v1/transfers`).
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         self.http.post("transfers", &data, extra_headers).await
     }
 }
@@ -62,9 +66,15 @@ impl Fetchable for Transfers {
     type Item = Transfer;
 
     /// Fetch a transfer by ID (`GET /v1/transfers/{transfer_id}`).
-    async fn fetch(&self, transfer_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        transfer_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("transfers/{}", transfer_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -78,7 +88,9 @@ impl Listable for Transfers {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        self.http.get("transfers", query.as_ref(), extra_headers).await
+        self.http
+            .get("transfers", query.as_ref(), extra_headers)
+            .await
     }
 }
 

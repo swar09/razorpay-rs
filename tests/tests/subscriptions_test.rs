@@ -1,15 +1,15 @@
 use razorpay::{
+    Creatable, Fetchable, RazorpayClientBuilder, Updatable,
     models::{
         Addon, CreateAddonRequest, CreatePlanItem, CreateSubscriptionRequest, PlanItem,
         Subscription, SubscriptionStatus, UpdateSubscriptionRequest,
     },
-    Creatable, Fetchable, RazorpayClientBuilder, Updatable,
 };
 use std::time::Duration;
 use url::Url;
 use wiremock::{
-    matchers::{basic_auth, body_json, method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{basic_auth, body_json, method, path},
 };
 
 async fn create_test_client(server_uri: &str) -> razorpay::RazorpayClient {

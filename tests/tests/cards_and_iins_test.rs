@@ -1,12 +1,12 @@
 use razorpay::{
-    models::{Card, Iin, ListOptions, RazorpayList},
     Fetchable, RazorpayClientBuilder,
+    models::{Card, Iin, ListOptions, RazorpayList},
 };
 use std::time::Duration;
 use url::Url;
 use wiremock::{
-    matchers::{basic_auth, method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{basic_auth, method, path},
 };
 
 async fn create_test_client(server_uri: &str) -> razorpay::RazorpayClient {
@@ -59,10 +59,9 @@ async fn test_cards_operations() {
     Mock::given(method("POST"))
         .and(path("/cards/fingerprints"))
         .and(basic_auth("rzp_test_key", "test_secret"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(serde_json::json!({"entity": "card_fingerprint", "fingerprint": "fp_abc123"})),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            serde_json::json!({"entity": "card_fingerprint", "fingerprint": "fp_abc123"}),
+        ))
         .mount(&mock_server)
         .await;
 
@@ -124,7 +123,15 @@ async fn test_iins_operations() {
 
     let list = client
         .iins()
-        .all(Some(ListOptions { count: Some(10), skip: None, from: None, to: None }), None)
+        .all(
+            Some(ListOptions {
+                count: Some(10),
+                skip: None,
+                from: None,
+                to: None,
+            }),
+            None,
+        )
         .await
         .expect("IINs list should succeed");
     assert_eq!(list.count, 1);

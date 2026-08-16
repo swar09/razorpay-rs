@@ -1,12 +1,12 @@
 use razorpay::{
-    models::{ProductConfiguration, TncResponse},
     RazorpayClientBuilder,
+    models::{ProductConfiguration, TncResponse},
 };
 use std::time::Duration;
 use url::Url;
 use wiremock::{
-    matchers::{basic_auth, method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{basic_auth, method, path},
 };
 
 async fn create_test_client(server_uri: &str) -> razorpay::RazorpayClient {
@@ -43,7 +43,11 @@ async fn test_products_and_tnc_operations() {
 
     let created = client
         .products()
-        .request_configuration("acc_123", &serde_json::json!({"product_name": "payment_gateway"}), None)
+        .request_configuration(
+            "acc_123",
+            &serde_json::json!({"product_name": "payment_gateway"}),
+            None,
+        )
         .await
         .expect("Request configuration should succeed");
     assert_eq!(created.id, Some("prod_123".to_string()));
@@ -73,7 +77,12 @@ async fn test_products_and_tnc_operations() {
 
     let updated = client
         .products()
-        .update("acc_123", "prod_123", &serde_json::json!({"settlements": {"schedule": "t+1"}}), None)
+        .update(
+            "acc_123",
+            "prod_123",
+            &serde_json::json!({"settlements": {"schedule": "t+1"}}),
+            None,
+        )
         .await
         .expect("Update configuration should succeed");
     assert_eq!(updated.status, Some("active".to_string()));

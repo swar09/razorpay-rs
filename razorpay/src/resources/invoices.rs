@@ -24,15 +24,27 @@ impl Invoices {
     }
 
     /// Issue a draft invoice (`POST /v1/invoices/{invoice_id}/issue`).
-    pub async fn issue(&self, invoice_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Invoice> {
+    pub async fn issue(
+        &self,
+        invoice_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Invoice> {
         let path = format!("invoices/{}/issue", invoice_id);
-        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+        self.http
+            .post(&path, &serde_json::json!({}), extra_headers)
+            .await
     }
 
     /// Cancel an issued invoice (`POST /v1/invoices/{invoice_id}/cancel`).
-    pub async fn cancel(&self, invoice_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Invoice> {
+    pub async fn cancel(
+        &self,
+        invoice_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Invoice> {
         let path = format!("invoices/{}/cancel", invoice_id);
-        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+        self.http
+            .post(&path, &serde_json::json!({}), extra_headers)
+            .await
     }
 
     /// Send or resend notification for an invoice (`POST /v1/invoices/{invoice_id}/notify_by/{medium}`).
@@ -47,7 +59,9 @@ impl Invoices {
             NotifyMedium::Email => "email",
         };
         let path = format!("invoices/{}/notify_by/{}", invoice_id, medium_str);
-        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+        self.http
+            .post(&path, &serde_json::json!({}), extra_headers)
+            .await
     }
 
     /// Create subscription registration link (`POST /v1/subscription_registration/auth_links`).
@@ -56,7 +70,9 @@ impl Invoices {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<serde_json::Value> {
-        self.http.post("subscription_registration/auth_links", data, extra_headers).await
+        self.http
+            .post("subscription_registration/auth_links", data, extra_headers)
+            .await
     }
 }
 
@@ -66,7 +82,11 @@ impl Creatable for Invoices {
     type Response = Invoice;
 
     /// Create an invoice (`POST /v1/invoices`).
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         self.http.post("invoices", &data, extra_headers).await
     }
 }
@@ -76,9 +96,15 @@ impl Fetchable for Invoices {
     type Item = Invoice;
 
     /// Fetch an invoice by ID (`GET /v1/invoices/{invoice_id}`).
-    async fn fetch(&self, invoice_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        invoice_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("invoices/{}", invoice_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -92,7 +118,9 @@ impl Listable for Invoices {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        self.http.get("invoices", query.as_ref(), extra_headers).await
+        self.http
+            .get("invoices", query.as_ref(), extra_headers)
+            .await
     }
 }
 
@@ -118,7 +146,11 @@ impl Deletable for Invoices {
     type Response = DeleteResponse;
 
     /// Delete a draft invoice (`DELETE /v1/invoices/{invoice_id}`).
-    async fn delete(&self, invoice_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn delete(
+        &self,
+        invoice_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         let path = format!("invoices/{}", invoice_id);
         self.http.delete(&path, extra_headers).await
     }

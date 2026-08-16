@@ -1,14 +1,14 @@
 use razorpay::{
+    Creatable, Fetchable, RazorpayClientBuilder,
     error::RazorpayError,
     models::CreateOrderRequest,
     webhooks::{verify_payment_signature, verify_webhook_signature},
-    Creatable, Fetchable, RazorpayClientBuilder,
 };
 use std::time::Duration;
 use url::Url;
 use wiremock::{
-    matchers::{method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{method, path},
 };
 
 async fn create_test_client(server_uri: &str) -> razorpay::RazorpayClient {
@@ -153,6 +153,9 @@ async fn test_server_returns_500_html_page_graceful_handling() {
             assert_eq!(api_err.code, "HTTP_500");
             assert!(api_err.description.contains("500"));
         }
-        other => panic!("Expected graceful Api fallback for 500 HTML, got {:?}", other),
+        other => panic!(
+            "Expected graceful Api fallback for 500 HTML, got {:?}",
+            other
+        ),
     }
 }

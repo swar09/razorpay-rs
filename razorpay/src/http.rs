@@ -1,5 +1,5 @@
 use reqwest::header::HeaderMap;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use url::Url;
 
 use crate::{
@@ -20,9 +20,7 @@ pub(crate) struct Http {
 #[allow(dead_code)]
 impl Http {
     pub(crate) fn new(config: RazorpayConfig) -> RazorpayResult<Self> {
-        let client = reqwest::Client::builder()
-            .timeout(config.timeout)
-            .build()?;
+        let client = reqwest::Client::builder().timeout(config.timeout).build()?;
         Ok(Self { client, config })
     }
 
@@ -43,7 +41,10 @@ impl Http {
         base.join(clean_path).map_err(RazorpayError::Url)
     }
 
-    async fn handle_response<T: DeserializeOwned>(&self, response: reqwest::Response) -> RazorpayResult<T> {
+    async fn handle_response<T: DeserializeOwned>(
+        &self,
+        response: reqwest::Response,
+    ) -> RazorpayResult<T> {
         let status = response.status();
         if status.is_success() {
             let body = response.json::<T>().await?;
@@ -199,8 +200,8 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use std::time::Duration;
     use wiremock::{
-        matchers::{basic_auth, body_json, header, method, path, query_param},
         Mock, MockServer, ResponseTemplate,
+        matchers::{basic_auth, body_json, header, method, path, query_param},
     };
 
     #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -390,7 +391,8 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let result: RazorpayResult<MockEntity> = http.get::<MockEntity, ()>("broken", None, None).await;
+        let result: RazorpayResult<MockEntity> =
+            http.get::<MockEntity, ()>("broken", None, None).await;
 
         match result {
             Err(RazorpayError::Api(api_err)) => {
@@ -401,4 +403,3 @@ mod tests {
         }
     }
 }
-

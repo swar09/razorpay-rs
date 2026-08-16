@@ -1,7 +1,4 @@
-use razorpay::{
-    models::CreateOrderRequest,
-    Creatable, RazorpayClient,
-};
+use razorpay::{Creatable, RazorpayClient, models::CreateOrderRequest};
 use std::{collections::HashMap, env};
 
 #[tokio::main]

@@ -352,7 +352,10 @@ async fn test_live_items_and_qr_codes_flow() {
 
     // Also fetch the specific QR code referenced by the user
     if let Ok(user_qr) = client.qr_codes().fetch("qr_TQHxzpli0YA1zu", None).await {
-        println!("Successfully fetched user QR code qr_TQHxzpli0YA1zu with status: {}", user_qr.status);
+        println!(
+            "Successfully fetched user QR code qr_TQHxzpli0YA1zu with status: {}",
+            user_qr.status
+        );
     }
 
     // Close the newly created QR Code
@@ -425,12 +428,18 @@ async fn test_live_payments_and_invoices_listing() {
 
     // List transfers on recent payment if available
     if let Some(recent_payment) = payments.items.first() {
-        println!("Fetching transfers for live payment {}...", recent_payment.id);
+        println!(
+            "Fetching transfers for live payment {}...",
+            recent_payment.id
+        );
         let payment_transfers = client
             .payments()
             .transfers(&recent_payment.id, None, None)
             .await
             .expect("Fetching payment transfers should succeed");
-        println!("Transfers on payment {}: {}", recent_payment.id, payment_transfers.count);
+        println!(
+            "Transfers on payment {}: {}",
+            recent_payment.id, payment_transfers.count
+        );
     }
 }

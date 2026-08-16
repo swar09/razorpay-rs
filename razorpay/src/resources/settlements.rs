@@ -29,7 +29,9 @@ impl Settlements {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<SettlementReconItem>> {
-        self.http.get("settlements/recon/combined", query.as_ref(), extra_headers).await
+        self.http
+            .get("settlements/recon/combined", query.as_ref(), extra_headers)
+            .await
     }
 
     /// Create an on-demand instant settlement (`POST /v1/settlements/ondemand`).
@@ -38,7 +40,9 @@ impl Settlements {
         data: CreateInstantSettlementRequest,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<InstantSettlement> {
-        self.http.post("settlements/ondemand", &data, extra_headers).await
+        self.http
+            .post("settlements/ondemand", &data, extra_headers)
+            .await
     }
 
     /// Fetch all on-demand settlements (`GET /v1/settlements/ondemand`).
@@ -47,7 +51,9 @@ impl Settlements {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<InstantSettlement>> {
-        self.http.get("settlements/ondemand", query.as_ref(), extra_headers).await
+        self.http
+            .get("settlements/ondemand", query.as_ref(), extra_headers)
+            .await
     }
 
     /// Fetch an on-demand settlement by its ID (`GET /v1/settlements/ondemand/{ondemand_id}`).
@@ -57,7 +63,9 @@ impl Settlements {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<InstantSettlement> {
         let path = format!("settlements/ondemand/{}", ondemand_id);
-        self.http.get::<InstantSettlement, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<InstantSettlement, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -66,9 +74,15 @@ impl Fetchable for Settlements {
     type Item = Settlement;
 
     /// Fetch a settlement by ID (`GET /v1/settlements/{settlement_id}`).
-    async fn fetch(&self, settlement_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        settlement_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("settlements/{}", settlement_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -82,6 +96,8 @@ impl Listable for Settlements {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        self.http.get("settlements", query.as_ref(), extra_headers).await
+        self.http
+            .get("settlements", query.as_ref(), extra_headers)
+            .await
     }
 }

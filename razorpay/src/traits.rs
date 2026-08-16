@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use reqwest::header::HeaderMap;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 
 use crate::{
     error::RazorpayResult,
@@ -14,7 +14,8 @@ pub trait Fetchable {
     type Item: DeserializeOwned + Send;
 
     /// Fetch a resource entity by its primary ID.
-    async fn fetch(&self, id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item>;
+    async fn fetch(&self, id: &str, extra_headers: Option<HeaderMap>)
+    -> RazorpayResult<Self::Item>;
 }
 
 /// Common trait for resources that support retrieving a paginated collection.
@@ -40,7 +41,11 @@ pub trait Creatable {
     type Response: DeserializeOwned + Send;
 
     /// Create a new resource entity with the given payload.
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response>;
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response>;
 }
 
 /// Common trait for resources that support modifying an existing entity.
@@ -67,5 +72,9 @@ pub trait Deletable {
     type Response: DeserializeOwned + Send;
 
     /// Delete or cancel a resource entity by its primary ID.
-    async fn delete(&self, id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response>;
+    async fn delete(
+        &self,
+        id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response>;
 }

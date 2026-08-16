@@ -1,12 +1,12 @@
 use razorpay::{
-    models::{CreatePaymentLinkRequest, NotifyMedium, PaymentLink},
     Creatable, RazorpayClientBuilder,
+    models::{CreatePaymentLinkRequest, NotifyMedium, PaymentLink},
 };
 use std::time::Duration;
 use url::Url;
 use wiremock::{
-    matchers::{basic_auth, body_json, method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{basic_auth, body_json, method, path},
 };
 
 async fn create_test_client(server_uri: &str) -> razorpay::RazorpayClient {
@@ -107,7 +107,9 @@ async fn test_payment_links_operations() {
     Mock::given(method("POST"))
         .and(path("/payment_links/plink_123/notify_by/sms"))
         .and(basic_auth("rzp_test_key", "test_secret"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"success": true})))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(serde_json::json!({"success": true})),
+        )
         .mount(&mock_server)
         .await;
 

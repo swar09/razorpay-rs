@@ -30,7 +30,9 @@ impl PaymentLinks {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<PaymentLink> {
         let path = format!("payment_links/{}/cancel", payment_link_id);
-        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+        self.http
+            .post(&path, &serde_json::json!({}), extra_headers)
+            .await
     }
 
     /// Resend notification for a payment link via SMS or Email (`POST /v1/payment_links/{payment_link_id}/notify_by/{medium}`).
@@ -45,7 +47,9 @@ impl PaymentLinks {
             NotifyMedium::Email => "email",
         };
         let path = format!("payment_links/{}/notify_by/{}", payment_link_id, medium_str);
-        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+        self.http
+            .post(&path, &serde_json::json!({}), extra_headers)
+            .await
     }
 }
 
@@ -55,7 +59,11 @@ impl Creatable for PaymentLinks {
     type Response = PaymentLink;
 
     /// Create a standard or UPI payment link (`POST /v1/payment_links`).
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         self.http.post("payment_links", &data, extra_headers).await
     }
 }
@@ -65,9 +73,15 @@ impl Fetchable for PaymentLinks {
     type Item = PaymentLink;
 
     /// Fetch a payment link by ID (`GET /v1/payment_links/{payment_link_id}`).
-    async fn fetch(&self, payment_link_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        payment_link_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("payment_links/{}", payment_link_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -81,7 +95,9 @@ impl Listable for PaymentLinks {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        self.http.get("payment_links", query.as_ref(), extra_headers).await
+        self.http
+            .get("payment_links", query.as_ref(), extra_headers)
+            .await
     }
 }
 

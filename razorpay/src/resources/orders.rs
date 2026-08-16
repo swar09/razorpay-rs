@@ -60,7 +60,11 @@ impl Creatable for Orders {
     type Response = Order;
 
     /// Create a new order (`POST /v1/orders`).
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         self.http.post("orders", &data, extra_headers).await
     }
 }
@@ -70,9 +74,15 @@ impl Fetchable for Orders {
     type Item = Order;
 
     /// Fetch an order by its ID (`GET /v1/orders/{order_id}`).
-    async fn fetch(&self, order_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        order_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("orders/{}", order_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 

@@ -41,7 +41,10 @@ impl Stakeholders {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<Stakeholder> {
-        let path = format!("../v2/accounts/{}/stakeholders/{}", self.account_id, stakeholder_id);
+        let path = format!(
+            "../v2/accounts/{}/stakeholders/{}",
+            self.account_id, stakeholder_id
+        );
         self.http.patch(&path, data, extra_headers).await
     }
 }
@@ -51,9 +54,18 @@ impl Fetchable for Stakeholders {
     type Item = Stakeholder;
 
     /// Fetch a stakeholder by ID (`GET /v2/accounts/{account_id}/stakeholders/{stakeholder_id}`).
-    async fn fetch(&self, stakeholder_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
-        let path = format!("../v2/accounts/{}/stakeholders/{}", self.account_id, stakeholder_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+    async fn fetch(
+        &self,
+        stakeholder_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
+        let path = format!(
+            "../v2/accounts/{}/stakeholders/{}",
+            self.account_id, stakeholder_id
+        );
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 

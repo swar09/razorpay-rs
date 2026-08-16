@@ -1,7 +1,7 @@
 use razorpay::{
+    RazorpayClient, RazorpayClientBuilder,
     config::{DEFAULT_BASE_URL, DEFAULT_TIMEOUT},
     error::RazorpayError,
-    RazorpayClient, RazorpayClientBuilder,
 };
 use std::time::Duration;
 use url::Url;
@@ -46,16 +46,20 @@ fn test_client_builder_missing_key_id() {
         .key_secret("some_secret")
         .build();
 
-    assert!(matches!(result, Err(RazorpayError::Config("missing key_id"))));
+    assert!(matches!(
+        result,
+        Err(RazorpayError::Config("missing key_id"))
+    ));
 }
 
 #[test]
 fn test_client_builder_missing_key_secret() {
-    let result = RazorpayClientBuilder::new()
-        .key_id("some_key")
-        .build();
+    let result = RazorpayClientBuilder::new().key_id("some_key").build();
 
-    assert!(matches!(result, Err(RazorpayError::Config("missing key_secret"))));
+    assert!(matches!(
+        result,
+        Err(RazorpayError::Config("missing key_secret"))
+    ));
 }
 
 #[test]

@@ -121,7 +121,9 @@ impl Payments {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<serde_json::Value> {
         let path = format!("payments/{}/otp_generate", payment_id);
-        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+        self.http
+            .post(&path, &serde_json::json!({}), extra_headers)
+            .await
     }
 
     /// Resend OTP for a payment (`POST /v1/payments/{payment_id}/otp/resend`).
@@ -131,7 +133,9 @@ impl Payments {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<serde_json::Value> {
         let path = format!("payments/{}/otp_resend", payment_id);
-        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+        self.http
+            .post(&path, &serde_json::json!({}), extra_headers)
+            .await
     }
 
     /// Submit OTP for a payment (`POST /v1/payments/{payment_id}/otp/submit`).

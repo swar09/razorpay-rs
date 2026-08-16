@@ -59,7 +59,9 @@ impl Customers {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<serde_json::Value> {
-        self.http.post("customers/eligibility", data, extra_headers).await
+        self.http
+            .post("customers/eligibility", data, extra_headers)
+            .await
     }
 
     /// Fetch customer eligibility check result (`GET /v1/customers/eligibility/{eligibility_id}`).
@@ -69,7 +71,9 @@ impl Customers {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<serde_json::Value> {
         let path = format!("customers/eligibility/{}", eligibility_id);
-        self.http.get::<serde_json::Value, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<serde_json::Value, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -79,7 +83,11 @@ impl Creatable for Customers {
     type Response = Customer;
 
     /// Create a customer (`POST /v1/customers`).
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         self.http.post("customers", &data, extra_headers).await
     }
 }
@@ -89,9 +97,15 @@ impl Fetchable for Customers {
     type Item = Customer;
 
     /// Fetch a customer by ID (`GET /v1/customers/{customer_id}`).
-    async fn fetch(&self, customer_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        customer_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("customers/{}", customer_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -105,7 +119,9 @@ impl Listable for Customers {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        self.http.get("customers", query.as_ref(), extra_headers).await
+        self.http
+            .get("customers", query.as_ref(), extra_headers)
+            .await
     }
 }
 
@@ -138,9 +154,15 @@ impl Fetchable for CustomerTokens {
     type Item = Token;
 
     /// Fetch a specific customer token (`GET /v1/customers/{customer_id}/tokens/{token_id}`).
-    async fn fetch(&self, token_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        token_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("customers/{}/tokens/{}", self.customer_id, token_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -164,7 +186,11 @@ impl Deletable for CustomerTokens {
     type Response = DeleteResponse;
 
     /// Delete a customer token (`DELETE /v1/customers/{customer_id}/tokens/{token_id}`).
-    async fn delete(&self, token_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn delete(
+        &self,
+        token_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         let path = format!("customers/{}/tokens/{}", self.customer_id, token_id);
         self.http.delete(&path, extra_headers).await
     }

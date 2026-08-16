@@ -77,3 +77,6 @@ pub fn verify_subscription_payment_signature(
         Err(RazorpayError::SignatureMismatch)
     }
 }
+
+// TODO("Add strongly-typed WebhookEvent enum matching event types like payment.captured, order.paid, subscription.charged, etc.")
+// TODO("Add programmatic Webhook management resource (client.webhooks() CRUD endpoints hitting /v1/webhooks and /v2/accounts/{account_id}/webhooks)")

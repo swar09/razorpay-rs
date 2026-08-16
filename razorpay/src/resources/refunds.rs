@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::{
     error::RazorpayResult,
     http::Http,
-    models::{CreateRefundRequest, ListOptions, Refund, RazorpayList, UpdateRefundRequest},
+    models::{CreateRefundRequest, ListOptions, RazorpayList, Refund, UpdateRefundRequest},
     traits::{Creatable, Fetchable, Listable, Updatable},
 };
 
@@ -27,7 +27,11 @@ impl Creatable for Refunds {
     type Response = Refund;
 
     /// Create a standalone refund (`POST /v1/refunds`).
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         self.http.post("refunds", &data, extra_headers).await
     }
 }
@@ -37,9 +41,15 @@ impl Fetchable for Refunds {
     type Item = Refund;
 
     /// Fetch a refund by its ID (`GET /v1/refunds/{refund_id}`).
-    async fn fetch(&self, refund_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        refund_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("refunds/{}", refund_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -53,7 +63,9 @@ impl Listable for Refunds {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        self.http.get("refunds", query.as_ref(), extra_headers).await
+        self.http
+            .get("refunds", query.as_ref(), extra_headers)
+            .await
     }
 }
 

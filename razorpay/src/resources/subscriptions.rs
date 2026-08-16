@@ -82,8 +82,13 @@ impl Subscriptions {
         subscription_id: &str,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<serde_json::Value> {
-        let path = format!("subscriptions/{}/retrieve_scheduled_changes", subscription_id);
-        self.http.get::<serde_json::Value, ()>(&path, None, extra_headers).await
+        let path = format!(
+            "subscriptions/{}/retrieve_scheduled_changes",
+            subscription_id
+        );
+        self.http
+            .get::<serde_json::Value, ()>(&path, None, extra_headers)
+            .await
     }
 
     /// Cancel scheduled changes for a subscription (`POST /v1/subscriptions/{subscription_id}/cancel_scheduled_changes`).
@@ -93,7 +98,9 @@ impl Subscriptions {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<Subscription> {
         let path = format!("subscriptions/{}/cancel_scheduled_changes", subscription_id);
-        self.http.post(&path, &serde_json::json!({}), extra_headers).await
+        self.http
+            .post(&path, &serde_json::json!({}), extra_headers)
+            .await
     }
 
     /// Delete an offer linked to a subscription (`DELETE /v1/subscriptions/{subscription_id}/{offer_id}`).
@@ -114,7 +121,11 @@ impl Creatable for Subscriptions {
     type Response = Subscription;
 
     /// Create a recurring subscription (`POST /v1/subscriptions`).
-    async fn create(&self, data: Self::Request, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         self.http.post("subscriptions", &data, extra_headers).await
     }
 }
@@ -124,9 +135,15 @@ impl Fetchable for Subscriptions {
     type Item = Subscription;
 
     /// Fetch a subscription by ID (`GET /v1/subscriptions/{subscription_id}`).
-    async fn fetch(&self, subscription_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        subscription_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("subscriptions/{}", subscription_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -140,7 +157,9 @@ impl Listable for Subscriptions {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        self.http.get("subscriptions", query.as_ref(), extra_headers).await
+        self.http
+            .get("subscriptions", query.as_ref(), extra_headers)
+            .await
     }
 }
 

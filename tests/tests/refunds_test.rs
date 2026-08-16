@@ -1,12 +1,12 @@
 use razorpay::{
-    models::{CreateRefundRequest, RazorpayList, Refund, RefundSpeed, UpdateRefundRequest},
     Creatable, Fetchable, Listable, RazorpayClientBuilder, Updatable,
+    models::{CreateRefundRequest, RazorpayList, Refund, RefundSpeed, UpdateRefundRequest},
 };
 use std::{collections::HashMap, time::Duration};
 use url::Url;
 use wiremock::{
-    matchers::{basic_auth, body_json, method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{basic_auth, body_json, method, path},
 };
 
 async fn create_test_client(server_uri: &str) -> razorpay::RazorpayClient {

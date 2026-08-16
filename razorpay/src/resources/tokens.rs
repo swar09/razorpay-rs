@@ -59,9 +59,15 @@ impl Fetchable for Tokens {
     type Item = Token;
 
     /// Fetch a token by ID (`GET /v1/tokens/{token_id}`).
-    async fn fetch(&self, token_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        token_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("tokens/{}", token_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -84,7 +90,11 @@ impl Deletable for Tokens {
     type Response = DeleteResponse;
 
     /// Delete a token (`DELETE /v1/tokens/{token_id}`).
-    async fn delete(&self, token_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Response> {
+    async fn delete(
+        &self,
+        token_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
         let path = format!("tokens/{}", token_id);
         self.http.delete(&path, extra_headers).await
     }

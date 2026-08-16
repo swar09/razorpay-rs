@@ -1,15 +1,15 @@
 use razorpay::{
+    Fetchable, RazorpayClientBuilder, Updatable,
     models::{
         CapturePaymentRequest, CardDetails, CreateRefundRequest, DowntimeInstrument, Payment,
         PaymentDowntime, PaymentMethod, PaymentStatus, Refund, RefundSpeed, UpdatePaymentRequest,
     },
-    Fetchable, RazorpayClientBuilder, Updatable,
 };
 use std::{collections::HashMap, time::Duration};
 use url::Url;
 use wiremock::{
-    matchers::{basic_auth, body_json, method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{basic_auth, body_json, method, path},
 };
 
 async fn create_test_client(server_uri: &str) -> razorpay::RazorpayClient {
@@ -353,7 +353,9 @@ async fn test_payments_otp_and_transfers() {
     Mock::given(method("POST"))
         .and(path("/payments/pay_123/otp_generate"))
         .and(basic_auth("rzp_test_key", "test_secret"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"status": "otp_sent"})))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(serde_json::json!({"status": "otp_sent"})),
+        )
         .mount(&mock_server)
         .await;
 
@@ -368,7 +370,10 @@ async fn test_payments_otp_and_transfers() {
     Mock::given(method("POST"))
         .and(path("/payments/pay_123/otp_submit"))
         .and(basic_auth("rzp_test_key", "test_secret"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"status": "authenticated"})))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(serde_json::json!({"status": "authenticated"})),
+        )
         .mount(&mock_server)
         .await;
 

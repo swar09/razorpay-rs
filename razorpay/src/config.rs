@@ -22,7 +22,10 @@ pub struct RazorpayConfig {
 
 impl RazorpayConfig {
     /// Create a new configuration with default base URL and timeout.
-    pub fn new(key_id: impl Into<String>, key_secret: impl Into<String>) -> Result<Self, url::ParseError> {
+    pub fn new(
+        key_id: impl Into<String>,
+        key_secret: impl Into<String>,
+    ) -> Result<Self, url::ParseError> {
         let base_url = Url::parse(DEFAULT_BASE_URL)?;
         Ok(Self {
             key_id: key_id.into(),
