@@ -43,7 +43,7 @@ async fn test_refunds_crud_operations() {
         acquirer_data: None,
         created_at: 1600000000,
         batch_id: None,
-        status: "processed".to_string(),
+        status: razorpay::models::RefundStatus::Processed,
         speed_processed: RefundSpeed::Instant,
         speed_requested: RefundSpeed::Instant,
     };

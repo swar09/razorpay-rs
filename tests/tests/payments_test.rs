@@ -243,7 +243,7 @@ async fn test_payments_refund_endpoint() {
         acquirer_data: None,
         created_at: 1600000000,
         batch_id: None,
-        status: "processed".to_string(),
+        status: razorpay::models::RefundStatus::Processed,
         speed_processed: RefundSpeed::Normal,
         speed_requested: RefundSpeed::Normal,
     };

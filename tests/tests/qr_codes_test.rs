@@ -1,6 +1,6 @@
 use razorpay::{
     Creatable, Fetchable, Listable, RazorpayClientBuilder,
-    models::{CreateQrCodeRequest, QrCode, RazorpayList},
+    models::{CreateQrCodeRequest, QrCode, QrCodeStatus, RazorpayList},
 };
 use std::time::Duration;
 use url::Url;
@@ -52,7 +52,7 @@ async fn test_qr_codes_operations() {
         payment_amount: Some(50000),
         payments_amount_received: 0,
         payments_count_received: 0,
-        status: "active".to_string(),
+        status: QrCodeStatus::Active,
         qr_type: "upi_qr".to_string(),
         usage: "single_use".to_string(),
     };
@@ -72,7 +72,7 @@ async fn test_qr_codes_operations() {
         .await
         .expect("Create QR code should succeed");
     assert_eq!(qr.id, "qr_123");
-    assert_eq!(qr.status, "active");
+    assert_eq!(qr.status, QrCodeStatus::Active);
 
     // 2. Fetch QR Code
     Mock::given(method("GET"))
@@ -113,7 +113,7 @@ async fn test_qr_codes_operations() {
 
     // 4. Close QR Code
     let mut closed_qr = expected_qr;
-    closed_qr.status = "closed".to_string();
+    closed_qr.status = QrCodeStatus::Closed;
 
     Mock::given(method("POST"))
         .and(path("/payments/qr_codes/qr_123/close"))
@@ -127,5 +127,5 @@ async fn test_qr_codes_operations() {
         .close("qr_123", None)
         .await
         .expect("Close QR code should succeed");
-    assert_eq!(closed.status, "closed");
+    assert_eq!(closed.status, QrCodeStatus::Closed);
 }

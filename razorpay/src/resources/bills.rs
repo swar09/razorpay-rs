@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::{
     error::RazorpayResult,
     http::Http,
-    models::{Bill, DeleteResponse},
+    models::{Bill, CreateBillRequest, DeleteResponse, UpdateBillRequest},
     traits::{Creatable, Deletable, Fetchable, Updatable},
 };
 
@@ -25,7 +25,7 @@ impl Bills {
 
 #[async_trait]
 impl Creatable for Bills {
-    type Request = serde_json::Value;
+    type Request = CreateBillRequest;
     type Response = Bill;
 
     /// Create a new bill (`POST /v1/bills`).
@@ -57,7 +57,7 @@ impl Fetchable for Bills {
 
 #[async_trait]
 impl Updatable for Bills {
-    type Request = serde_json::Value;
+    type Request = UpdateBillRequest;
     type Response = Bill;
 
     /// Update a bill (`PATCH /v1/bills/{bill_id}`).

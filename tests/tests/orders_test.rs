@@ -151,3 +151,49 @@ async fn test_orders_create_api_error_response() {
         other => panic!("Expected RazorpayError::Api, got {:?}", other),
     }
 }
+
+#[tokio::test]
+async fn test_orders_update_success() {
+    use razorpay::{Updatable, models::UpdateOrderRequest};
+    use std::collections::HashMap;
+
+    let mock_server = MockServer::start().await;
+    let client = create_test_client(&mock_server.uri()).await;
+
+    let mut notes_map = HashMap::new();
+    notes_map.insert("fulfillment_id".to_string(), "ful_9981".to_string());
+    let update_req = UpdateOrderRequest {
+        notes: notes_map.into(),
+    };
+
+    let expected_order = Order {
+        id: "order_Hk1234567890".to_string(),
+        entity: "order".to_string(),
+        amount: 50000,
+        amount_paid: Some(0),
+        amount_due: Some(50000),
+        currency: "INR".to_string(),
+        receipt: Some("rcpt_101".to_string()),
+        offer_id: None,
+        status: OrderStatus::Created,
+        partial_payment: false,
+        attempts: 0,
+        notes: None,
+        created_at: 1600000000,
+    };
+
+    Mock::given(method("PATCH"))
+        .and(path("/orders/order_Hk1234567890"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&expected_order))
+        .mount(&mock_server)
+        .await;
+
+    let order = client
+        .orders()
+        .update("order_Hk1234567890", update_req, None)
+        .await
+        .expect("Order update should succeed");
+
+    assert_eq!(order.id, "order_Hk1234567890");
+}

@@ -178,7 +178,7 @@ async fn test_live_payment_links_flow() {
         .await
         .expect("Live payment link cancellation should succeed");
 
-    assert_eq!(cancelled.status, "cancelled");
+    assert_eq!(cancelled.status, razorpay::models::PaymentLinkStatus::Cancelled);
 }
 
 #[tokio::test]
@@ -353,7 +353,7 @@ async fn test_live_items_and_qr_codes_flow() {
     // Also fetch the specific QR code referenced by the user
     if let Ok(user_qr) = client.qr_codes().fetch("qr_TQHxzpli0YA1zu", None).await {
         println!(
-            "Successfully fetched user QR code qr_TQHxzpli0YA1zu with status: {}",
+            "Successfully fetched user QR code qr_TQHxzpli0YA1zu with status: {:?}",
             user_qr.status
         );
     }
@@ -364,7 +364,7 @@ async fn test_live_items_and_qr_codes_flow() {
         .close(&qr.id, None)
         .await
         .expect("Live QR code close should succeed");
-    assert_eq!(closed_qr.status, "closed");
+    assert_eq!(closed_qr.status, razorpay::models::QrCodeStatus::Closed);
 }
 
 #[tokio::test]
@@ -532,21 +532,19 @@ async fn test_live_bills_flow() {
         .unwrap()
         .as_secs();
 
-    let bill_payload = serde_json::json!({
-        "store_code": "JK-001",
-        "business_type": "retail",
-        "business_category": "retail_and_consumer_goods",
-        "customer": {
+    let bill_payload = razorpay::models::CreateBillRequest {
+        store_code: Some("JK-001".to_string()),
+        business_type: Some("retail".to_string()),
+        business_category: Some("retail_and_consumer_goods".to_string()),
+        customer: Some(serde_json::json!({
             "contact": "9876543210",
             "name": "Gaurav Kumar"
-        },
-        "order_service_type": "dine_in",
-        "order_number": format!("ORD{}", unique_timestamp % 10000),
-        "receipt_timestamp": unique_timestamp,
-        "receipt_number": format!("INV{}", unique_timestamp),
-        "receipt_type": "tax_invoice",
-        "receipt_delivery": "digital",
-        "receipt_summary": {
+        })),
+        receipt_timestamp: Some(unique_timestamp),
+        receipt_number: Some(format!("INV{}", unique_timestamp)),
+        receipt_type: Some("tax_invoice".to_string()),
+        receipt_delivery: Some("digital".to_string()),
+        receipt_summary: Some(serde_json::json!({
             "total_quantity": 1,
             "sub_total_amount": 10000,
             "currency": "INR",
@@ -554,24 +552,21 @@ async fn test_live_bills_flow() {
             "payment_status": "success",
             "total_tax_amount": 0,
             "total_tax_percent": 0
-        },
-        "line_items": [
-            {
-                "name": "Live Soap",
-                "quantity": 1,
-                "unit_amount": 10000,
-                "unit": "pc",
-                "total_amount": 10000
-            }
-        ],
-        "payments": [
-            {
-                "method": "paytm",
-                "currency": "INR",
-                "amount": 10000
-            }
-        ]
-    });
+        })),
+        line_items: Some(vec![serde_json::json!({
+            "name": "Live Soap",
+            "quantity": 1,
+            "unit_amount": 10000,
+            "unit": "pc",
+            "total_amount": 10000
+        })]),
+        payments: Some(vec![serde_json::json!({
+            "method": "paytm",
+            "currency": "INR",
+            "amount": 10000
+        })]),
+        ..Default::default()
+    };
 
     match client.bills().create(bill_payload, None).await {
         Ok(bill) => {

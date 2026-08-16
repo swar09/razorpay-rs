@@ -1,6 +1,6 @@
 use razorpay::{
     Fetchable, Listable, RazorpayClientBuilder,
-    models::{ContestDisputeRequest, Dispute, RazorpayList},
+    models::{ContestDisputeRequest, Dispute, DisputePhase, DisputeStatus, RazorpayList},
 };
 use std::time::Duration;
 use url::Url;
@@ -34,8 +34,8 @@ async fn test_disputes_operations() {
         reason_code: "fraudulent".to_string(),
         reason_description: "Cardholder claims fraud".to_string(),
         respond_by: 1600003600,
-        status: "open".to_string(),
-        phase: "chargeback".to_string(),
+        status: DisputeStatus::Open,
+        phase: DisputePhase::Chargeback,
         created_at: 1600000000,
         evidence: None,
     };
@@ -79,7 +79,7 @@ async fn test_disputes_operations() {
 
     // 3. Accept Dispute
     let mut accepted_dispute = expected_dispute.clone();
-    accepted_dispute.status = "lost".to_string();
+    accepted_dispute.status = DisputeStatus::Lost;
 
     Mock::given(method("POST"))
         .and(path("/disputes/disp_123/accept"))
@@ -93,7 +93,7 @@ async fn test_disputes_operations() {
         .accept("disp_123", None)
         .await
         .expect("Accept dispute should succeed");
-    assert_eq!(accepted.status, "lost");
+    assert_eq!(accepted.status, DisputeStatus::Lost);
 
     // 4. Contest Dispute
     let contest_req = ContestDisputeRequest {
@@ -104,7 +104,7 @@ async fn test_disputes_operations() {
     };
 
     let mut contested_dispute = expected_dispute;
-    contested_dispute.status = "under_review".to_string();
+    contested_dispute.status = DisputeStatus::UnderReview;
 
     Mock::given(method("PATCH"))
         .and(path("/disputes/disp_123/contest"))
@@ -119,5 +119,5 @@ async fn test_disputes_operations() {
         .contest("disp_123", contest_req, None)
         .await
         .expect("Contest dispute should succeed");
-    assert_eq!(contested.status, "under_review");
+    assert_eq!(contested.status, DisputeStatus::UnderReview);
 }

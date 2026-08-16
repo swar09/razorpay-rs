@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::{
     error::RazorpayResult,
     http::Http,
-    models::{CreateOrderRequest, ListOptions, Order, Payment, RazorpayList},
+    models::{CreateOrderRequest, ListOptions, Order, Payment, RazorpayList, UpdateOrderRequest},
     traits::{Creatable, Fetchable, Listable, Updatable},
 };
 
@@ -102,7 +102,7 @@ impl Listable for Orders {
 
 #[async_trait]
 impl Updatable for Orders {
-    type Request = serde_json::Value;
+    type Request = UpdateOrderRequest;
     type Response = Order;
 
     /// Update order details (e.g. notes) (`PATCH /v1/orders/{order_id}`).

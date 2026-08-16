@@ -1,6 +1,6 @@
 use razorpay::{
     Creatable, Deletable, RazorpayClientBuilder,
-    models::{CreateInvoiceRequest, DeleteResponse, Invoice},
+    models::{CreateInvoiceRequest, DeleteResponse, Invoice, InvoiceStatus},
 };
 use std::time::Duration;
 use url::Url;
@@ -42,7 +42,7 @@ async fn test_invoices_operations() {
         id: "inv_123".to_string(),
         entity: "invoice".to_string(),
         invoice_type: "invoice".to_string(),
-        status: "draft".to_string(),
+        status: InvoiceStatus::Draft,
         invoice_number: Some("INV-001".to_string()),
         customer_id: Some("cust_100".to_string()),
         customer_details: None,
@@ -85,11 +85,11 @@ async fn test_invoices_operations() {
         .await
         .expect("Create invoice should succeed");
     assert_eq!(inv.id, "inv_123");
-    assert_eq!(inv.status, "draft");
+    assert_eq!(inv.status, InvoiceStatus::Draft);
 
     // 2. Issue Draft Invoice
     let mut issued_invoice = expected_invoice.clone();
-    issued_invoice.status = "issued".to_string();
+    issued_invoice.status = InvoiceStatus::Issued;
     issued_invoice.issued_at = Some(1600000100);
 
     Mock::given(method("POST"))
@@ -104,7 +104,7 @@ async fn test_invoices_operations() {
         .issue("inv_123", None)
         .await
         .expect("Issue invoice should succeed");
-    assert_eq!(issued.status, "issued");
+    assert_eq!(issued.status, InvoiceStatus::Issued);
 
     // 3. Delete Draft Invoice
     Mock::given(method("DELETE"))

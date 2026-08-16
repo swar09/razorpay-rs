@@ -21,6 +21,10 @@ impl Iins {
     }
 
     /// Fetch all IINs list (`GET /v1/iins/list`).
+    ///
+    /// **Note:** This endpoint requires IIN listing access to be enabled on your
+    /// Razorpay account. Standard merchant accounts receive an HTTP 404 from this endpoint.
+    /// Use [`Fetchable::fetch`] (`GET /v1/iins/{token_iin}`) for prefix lookups on standard accounts.
     pub async fn all(
         &self,
         query: Option<ListOptions>,

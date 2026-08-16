@@ -1,6 +1,6 @@
 use razorpay::{
     Creatable, RazorpayClientBuilder,
-    models::{CreatePaymentLinkRequest, NotifyMedium, PaymentLink},
+    models::{CreatePaymentLinkRequest, NotifyMedium, PaymentLink, PaymentLinkStatus},
 };
 use std::time::Duration;
 use url::Url;
@@ -60,7 +60,7 @@ async fn test_payment_links_operations() {
         reference_id: Some("ref_plink_01".to_string()),
         reminder_enable: false,
         short_url: "https://rzp.io/i/test123".to_string(),
-        status: "created".to_string(),
+        status: PaymentLinkStatus::Created,
         updated_at: 1600000000,
         upi_link: false,
         user_id: None,
@@ -87,7 +87,7 @@ async fn test_payment_links_operations() {
 
     // 2. Cancel Payment Link
     let mut cancelled_link = expected_link.clone();
-    cancelled_link.status = "cancelled".to_string();
+    cancelled_link.status = PaymentLinkStatus::Cancelled;
 
     Mock::given(method("POST"))
         .and(path("/payment_links/plink_123/cancel"))
@@ -101,7 +101,7 @@ async fn test_payment_links_operations() {
         .cancel("plink_123", None)
         .await
         .expect("Cancel payment link should succeed");
-    assert_eq!(cancelled.status, "cancelled");
+    assert_eq!(cancelled.status, PaymentLinkStatus::Cancelled);
 
     // 3. Notify by SMS
     Mock::given(method("POST"))

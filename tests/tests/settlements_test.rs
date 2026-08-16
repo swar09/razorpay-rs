@@ -31,7 +31,7 @@ async fn test_settlements_operations() {
         id: "setl_123".to_string(),
         entity: "settlement".to_string(),
         amount: 100000,
-        status: "processed".to_string(),
+        status: razorpay::models::SettlementStatus::Processed,
         fees: 2000,
         tax: 360,
         utr: Some("UTR123456789".to_string()),

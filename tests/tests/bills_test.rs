@@ -1,4 +1,7 @@
-use razorpay::{Creatable, Deletable, Fetchable, RazorpayClientBuilder, Updatable};
+use razorpay::{
+    Creatable, Deletable, Fetchable, RazorpayClientBuilder, Updatable,
+    models::{CreateBillRequest, UpdateBillRequest},
+};
 use wiremock::{
     Mock, ResponseTemplate,
     matchers::{method, path},
@@ -35,12 +38,13 @@ async fn test_bills_operations() {
         .mount(&mock_server)
         .await;
 
-    let create_payload = serde_json::json!({
-        "store_code": "JK-001",
-        "business_type": "retail",
-        "business_category": "retail_and_consumer_goods",
-        "receipt_number": "INV001250010"
-    });
+    let create_payload = CreateBillRequest {
+        store_code: Some("JK-001".to_string()),
+        business_type: Some("retail".to_string()),
+        business_category: Some("retail_and_consumer_goods".to_string()),
+        receipt_number: Some("INV001250010".to_string()),
+        ..Default::default()
+    };
 
     let created = client.bills().create(create_payload, None).await.unwrap();
     assert_eq!(created.id, "bill_PYamApGCFTAjkh");
@@ -67,13 +71,18 @@ async fn test_bills_operations() {
         .mount(&mock_server)
         .await;
 
+    let update_payload = UpdateBillRequest {
+        customer: None,
+        line_items: None,
+        receipt_summary: None,
+        taxes: None,
+        payments: None,
+        tags: Some(vec!["pos".to_string()]),
+    };
+
     let updated = client
         .bills()
-        .update(
-            "bill_PYamApGCFTAjkh",
-            serde_json::json!({ "store_code": "JK-002" }),
-            None,
-        )
+        .update("bill_PYamApGCFTAjkh", update_payload, None)
         .await
         .unwrap();
     assert_eq!(updated.id, "bill_PYamApGCFTAjkh");

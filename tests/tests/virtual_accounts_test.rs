@@ -2,6 +2,7 @@ use razorpay::{
     Creatable, Fetchable, Listable, RazorpayClientBuilder,
     models::{
         CreateVirtualAccountReceivers, CreateVirtualAccountRequest, RazorpayList, VirtualAccount,
+        VirtualAccountStatus,
     },
 };
 use std::time::Duration;
@@ -44,7 +45,7 @@ async fn test_virtual_accounts_operations() {
         description: Some("Virtual Account for Order #100".to_string()),
         amount_expected: Some(100000),
         amount_paid: 0,
-        status: "active".to_string(),
+        status: VirtualAccountStatus::Active,
         receivers: None,
         close_by: None,
         closed_at: None,
@@ -69,7 +70,7 @@ async fn test_virtual_accounts_operations() {
         .await
         .expect("Create virtual account should succeed");
     assert_eq!(va.id, "va_123");
-    assert_eq!(va.status, "active");
+    assert_eq!(va.status, VirtualAccountStatus::Active);
 
     // 2. Fetch Virtual Account
     Mock::given(method("GET"))
@@ -110,7 +111,7 @@ async fn test_virtual_accounts_operations() {
 
     // 4. Close Virtual Account
     let mut closed_va = expected_va;
-    closed_va.status = "closed".to_string();
+    closed_va.status = VirtualAccountStatus::Closed;
 
     Mock::given(method("POST"))
         .and(path("/virtual_accounts/va_123/close"))
@@ -124,5 +125,5 @@ async fn test_virtual_accounts_operations() {
         .close("va_123", None)
         .await
         .expect("Close virtual account should succeed");
-    assert_eq!(closed.status, "closed");
+    assert_eq!(closed.status, VirtualAccountStatus::Closed);
 }

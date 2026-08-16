@@ -222,6 +222,13 @@ pub struct CreateOrderRequest {
     pub notes: Option<Notes>,
 }
 
+/// Request parameters to update order notes via `PATCH /v1/orders/{id}`.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UpdateOrderRequest {
+    /// Updated key-value metadata notes.
+    pub notes: Notes,
+}
+
 // Payments (https://razorpay.com/docs/api/payments/)
 
 /// Current lifecycle status of a Payment.
@@ -447,16 +454,20 @@ pub enum RefundSpeed {
 }
 
 /// Lifecycle status of a refund.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum RefundStatusValue {
+pub enum RefundStatus {
     /// Refund is pending batch submission to bank.
+    #[default]
     Pending,
     /// Refund processed successfully by bank.
     Processed,
     /// Refund failed at banking gateway.
     Failed,
 }
+
+/// Backwards compatibility type alias for [`RefundStatus`].
+pub type RefundStatusValue = RefundStatus;
 
 /// Represents a Razorpay Refund entity (`entity: "refund"`).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -481,8 +492,8 @@ pub struct Refund {
     pub created_at: u64,
     /// Batch ID if processed via a bulk refund batch.
     pub batch_id: Option<String>,
-    /// Status string: `"pending"`, `"processed"`, or `"failed"`.
-    pub status: String,
+    /// Status of the refund.
+    pub status: RefundStatus,
     /// Actual speed at which refund was processed by bank.
     pub speed_processed: RefundSpeed,
     /// Speed tier requested when creating the refund.
@@ -518,6 +529,19 @@ pub struct UpdateRefundRequest {
 
 // Settlements (https://razorpay.com/docs/api/settlements/)
 
+/// Lifecycle status of a settlement.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum SettlementStatus {
+    /// Settlement initiated.
+    #[default]
+    Created,
+    /// Settlement processed and credited to merchant bank account.
+    Processed,
+    /// Settlement failed.
+    Failed,
+}
+
 /// Represents a Razorpay Settlement entity (`entity: "settlement"`).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Settlement {
@@ -527,8 +551,8 @@ pub struct Settlement {
     pub entity: String,
     /// Net settled amount deposited to merchant bank account (in paise).
     pub amount: u64,
-    /// Settlement status: `"created"`, `"processed"`, or `"failed"`.
-    pub status: String,
+    /// Settlement status.
+    pub status: SettlementStatus,
     /// Total transaction fee deducted across transactions in this settlement (in paise).
     pub fees: u64,
     /// Total GST deducted across transactions in this settlement (in paise).
@@ -708,15 +732,19 @@ pub struct CreateCustomerRequest {
     /// Customer full name.
     pub name: String,
     /// Customer email address.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
     /// Customer phone number with country code.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub contact: Option<String>,
     /// Customer GSTIN tax registration number.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub gstin: Option<String>,
     /// Set to `0` to allow duplicate customer creation if email/contact exists (default: `1`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fail_existing: Option<u8>,
     /// Custom key-value notes.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<Notes>,
 }
 
@@ -869,9 +897,9 @@ pub struct PaymentLink {
     /// Hosted short URL where customer completes payment (e.g., `https://rzp.io/i/xxxx`).
     #[serde(default)]
     pub short_url: String,
-    /// Status: `"created"`, `"partially_paid"`, `"paid"`, `"cancelled"`, `"expired"`.
+    /// Status of the payment link.
     #[serde(default)]
-    pub status: String,
+    pub status: PaymentLinkStatus,
     /// Last updated timestamp.
     #[serde(default)]
     pub updated_at: u64,
@@ -886,15 +914,45 @@ pub struct PaymentLink {
     pub callback_method: Option<String>,
 }
 
+/// Lifecycle status of a Payment Link.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum PaymentLinkStatus {
+    /// Link created and awaiting customer payment.
+    #[default]
+    Created,
+    /// Customer made a partial payment on the link.
+    PartiallyPaid,
+    /// Link has been paid in full.
+    Paid,
+    /// Link was manually cancelled by the merchant.
+    Cancelled,
+    /// Link expired before full payment.
+    Expired,
+}
+
 /// Notification dispatch configuration for Payment Links.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PaymentLinkNotify {
     /// Send payment link via Email.
-    pub email: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<bool>,
     /// Send payment link via SMS.
-    pub sms: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sms: Option<bool>,
     /// Send payment link via WhatsApp.
     pub whatsapp: Option<bool>,
+}
+
+/// Customer details object for Payment Links.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PaymentLinkCustomer {
+    /// Customer full name.
+    pub name: Option<String>,
+    /// Customer email address.
+    pub email: Option<String>,
+    /// Customer contact phone number.
+    pub contact: Option<String>,
 }
 
 /// Payment record associated with a Payment Link.
@@ -912,17 +970,6 @@ pub struct PaymentLinkPayment {
     pub status: String,
     /// Updated timestamp.
     pub updated_at: u64,
-}
-
-/// Inline customer information used during Payment Link creation.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct PaymentLinkCustomer {
-    /// Customer full name.
-    pub name: Option<String>,
-    /// Customer email address.
-    pub email: Option<String>,
-    /// Customer contact phone number.
-    pub contact: Option<String>,
 }
 
 /// Request parameters to create a new Payment Link via `POST /v1/payment_links`.
@@ -1000,6 +1047,17 @@ pub enum NotifyMedium {
 
 // QR Codes (https://razorpay.com/docs/api/qr-codes/)
 
+/// Lifecycle status of a QR Code.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum QrCodeStatus {
+    /// QR Code is active and accepting payments.
+    #[default]
+    Active,
+    /// QR Code has been closed.
+    Closed,
+}
+
 /// Represents a Razorpay Dynamic/Static QR Code entity (`entity: "qr_code"`).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct QrCode {
@@ -1033,8 +1091,8 @@ pub struct QrCode {
     pub payments_amount_received: u64,
     /// Total number of successful payments received.
     pub payments_count_received: u32,
-    /// Status: `"active"`, `"closed"`.
-    pub status: String,
+    /// Status of the QR code.
+    pub status: QrCodeStatus,
     /// QR code type, typically `"upi_qr"`.
     #[serde(rename = "type")]
     pub qr_type: String,
@@ -1154,6 +1212,27 @@ pub struct InvoiceLineItem {
     pub taxes: Vec<TaxLine>,
 }
 
+/// Lifecycle status of an Invoice.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum InvoiceStatus {
+    /// Draft invoice.
+    #[default]
+    Draft,
+    /// Issued invoice awaiting payment.
+    Issued,
+    /// Invoice paid in full.
+    Paid,
+    /// Partially paid invoice.
+    PartiallyPaid,
+    /// Cancelled invoice.
+    Cancelled,
+    /// Expired invoice.
+    Expired,
+    /// Deleted invoice.
+    Deleted,
+}
+
 /// Represents a Razorpay Invoice entity (`entity: "invoice"`).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Invoice {
@@ -1164,8 +1243,8 @@ pub struct Invoice {
     /// Invoice type: `"invoice"`, `"link"`, `"ecod"`.
     #[serde(rename = "type")]
     pub invoice_type: String,
-    /// Status: `"draft"`, `"issued"`, `"paid"`, `"partially_paid"`, `"cancelled"`, `"expired"`.
-    pub status: String,
+    /// Status of the invoice.
+    pub status: InvoiceStatus,
     /// Merchant invoice number (e.g., `"INV-2026-001"`).
     pub invoice_number: Option<String>,
     /// Customer ID.
@@ -1605,6 +1684,7 @@ pub struct CreateAddonRequest {
     /// Addon item details.
     pub item: CreatePlanItem,
     /// Quantity of the addon to add.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub quantity: Option<u32>,
 }
 
@@ -1673,14 +1753,48 @@ pub struct Dispute {
     pub reason_description: String,
     /// Deadline timestamp to respond with evidence.
     pub respond_by: u64,
-    /// Dispute status: `"open"`, `"under_review"`, `"won"`, `"lost"`, `"closed"`.
-    pub status: String,
-    /// Dispute lifecycle phase: `"fraud"`, `"retrieval"`, `"chargeback"`, `"pre_arbitration"`, `"arbitration"`.
-    pub phase: String,
+    /// Dispute status.
+    pub status: DisputeStatus,
+    /// Dispute lifecycle phase.
+    pub phase: DisputePhase,
     /// Creation timestamp.
     pub created_at: u64,
     /// Submitted merchant evidence.
     pub evidence: Option<DisputeEvidence>,
+}
+
+/// Lifecycle status of a Dispute.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum DisputeStatus {
+    /// Dispute opened by issuing bank.
+    #[default]
+    Open,
+    /// Merchant evidence under review by bank.
+    UnderReview,
+    /// Dispute resolved in favor of merchant.
+    Won,
+    /// Dispute resolved in favor of cardholder / customer.
+    Lost,
+    /// Dispute closed without action.
+    Closed,
+}
+
+/// Lifecycle phase of a Dispute.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum DisputePhase {
+    /// Fraud notification phase.
+    #[default]
+    Fraud,
+    /// Information retrieval request phase.
+    Retrieval,
+    /// Formal chargeback phase.
+    Chargeback,
+    /// Pre-arbitration dispute phase.
+    PreArbitration,
+    /// Arbitration dispute phase before card networks.
+    Arbitration,
 }
 
 /// Request parameters to contest or draft dispute evidence via `POST /v1/disputes/{id}/contest`.
@@ -1689,28 +1803,40 @@ pub struct ContestDisputeRequest {
     /// Disputed amount contested (in paise).
     pub amount: u64,
     /// Text summary explaining merchant defense.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<String>,
     /// Proof of shipping document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub shipping_proof: Option<Vec<String>>,
     /// Proof of billing document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub billing_proof: Option<Vec<String>>,
     /// Proof of cancellation policy document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cancellation_proof: Option<Vec<String>>,
     /// Customer communication document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub customer_communication: Option<Vec<String>>,
     /// Proof of service document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub proof_of_service: Option<Vec<String>>,
     /// Explanation letter document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub explanation_letter: Option<Vec<String>>,
     /// Refund confirmation document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub refund_confirmation: Option<Vec<String>>,
     /// Activity log document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub access_activity_log: Option<Vec<String>>,
     /// Refund cancellation policy document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub refund_cancellation_policy: Option<Vec<String>>,
     /// Terms and conditions document IDs.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub terms_and_conditions: Option<Vec<String>>,
     /// Other supporting document records.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub others: Option<Vec<DisputeOtherDocument>>,
     /// Action to perform: `"draft"` (save work) or `"submit"` (transmit to bank).
     pub action: String,
@@ -1910,8 +2036,8 @@ pub struct VirtualAccount {
     pub amount_expected: Option<u64>,
     /// Total amount paid into this account so far (in paise).
     pub amount_paid: u64,
-    /// Status: `"active"`, `"closed"`.
-    pub status: String,
+    /// Status of the virtual account.
+    pub status: VirtualAccountStatus,
     /// List of receiver instruments (Virtual Bank Account, Virtual UPI VPA).
     pub receivers: Option<Vec<VirtualAccountReceiver>>,
     /// Scheduled closure timestamp.
@@ -1928,6 +2054,19 @@ pub struct VirtualAccount {
     pub created_at: u64,
 }
 
+/// Lifecycle status of a Virtual Account.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum VirtualAccountStatus {
+    /// Virtual account is active and accepting deposits.
+    #[default]
+    Active,
+    /// Virtual account has received full expected payment.
+    Paid,
+    /// Virtual account has been closed.
+    Closed,
+}
+
 /// Receiver types requested for virtual account creation.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CreateVirtualAccountReceivers {
@@ -1941,14 +2080,19 @@ pub struct CreateVirtualAccountRequest {
     /// Receiver types configuration (`bank_account`, `vpa`).
     pub receivers: CreateVirtualAccountReceivers,
     /// Description.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     /// Expected amount in paise.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub amount: Option<u64>,
     /// Customer ID to link.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub customer_id: Option<String>,
     /// Expiration timestamp in seconds.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub close_by: Option<u64>,
     /// Key-value metadata notes.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<Notes>,
 }
 
@@ -2346,4 +2490,270 @@ pub struct Bill {
     /// Creation UNIX timestamp.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub created_at: Option<u64>,
+}
+
+/// Request parameters to create a retail Bill via `POST /v1/bills`.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CreateBillRequest {
+    /// Business type (e.g., `"retail"`, `"ecommerce"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub business_type: Option<String>,
+    /// Business category (e.g., `"retail_and_consumer_goods"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub business_category: Option<String>,
+    /// Customer details object.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer: Option<serde_json::Value>,
+    /// Loyalty points and rewards data.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loyalty: Option<serde_json::Value>,
+    /// Retail store code identifier.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub store_code: Option<String>,
+    /// Receipt UNIX timestamp.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_timestamp: Option<u64>,
+    /// Receipt / Invoice number.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_number: Option<String>,
+    /// Receipt type (e.g., `"tax_invoice"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_type: Option<String>,
+    /// Receipt delivery method: `"digital"` or `"print"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_delivery: Option<String>,
+    /// Hosted digital receipt URL.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_url: Option<String>,
+    /// Physical billing POS terminal machine number.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub billing_pos_number: Option<String>,
+    /// POS terminal category.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pos_category: Option<String>,
+    /// Order tracking number.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order_number: Option<String>,
+    /// Line items in bill.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_items: Option<Vec<serde_json::Value>>,
+    /// Summary totals, gross, and net payable amounts.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_summary: Option<serde_json::Value>,
+    /// Tax calculations breakdown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub taxes: Option<Vec<serde_json::Value>>,
+    /// Payment method transactions list.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payments: Option<Vec<serde_json::Value>>,
+    /// Metadata tags.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Vec<String>>,
+}
+
+/// Request parameters to update a retail Bill via `PATCH /v1/bills/{id}`.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UpdateBillRequest {
+    /// Updated customer details.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer: Option<serde_json::Value>,
+    /// Updated line items.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_items: Option<Vec<serde_json::Value>>,
+    /// Updated summary.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_summary: Option<serde_json::Value>,
+    /// Updated taxes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub taxes: Option<Vec<serde_json::Value>>,
+    /// Updated payments.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payments: Option<Vec<serde_json::Value>>,
+    /// Updated metadata tags.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Vec<String>>,
+}
+
+// Webhooks (https://razorpay.com/docs/api/webhooks/)
+
+/// Represents a Razorpay Webhook subscription configuration entity (`entity: "webhook"`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Webhook {
+    /// Unique webhook identifier (e.g., `"hook_1234567890"`).
+    pub id: String,
+    /// Entity name, always `"webhook"`.
+    #[serde(default)]
+    pub entity: Option<String>,
+    /// Webhook destination endpoint URL.
+    pub url: String,
+    /// Alert notification email on delivery failure.
+    pub alert_email: Option<String>,
+    /// Webhook secret for HMAC signature verification.
+    pub secret: Option<String>,
+    /// Subscribed event types.
+    pub events: Vec<String>,
+    /// Webhook active status.
+    #[serde(default)]
+    pub active: bool,
+    /// Linked Account ID if configured on a route account.
+    pub account_id: Option<String>,
+    /// Creation UNIX timestamp.
+    #[serde(default)]
+    pub created_at: u64,
+    /// Last updated timestamp.
+    pub updated_at: Option<u64>,
+}
+
+/// Request parameters to create a Webhook via `POST /v1/webhooks` or `POST /v2/accounts/{id}/webhooks`.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CreateWebhookRequest {
+    /// Webhook endpoint URL.
+    pub url: String,
+    /// Subscribed event names (e.g., `vec!["payment.captured", "order.paid"]`).
+    pub events: Vec<String>,
+    /// Secret string used to verify webhook signatures.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub secret: Option<String>,
+    /// Email address for delivery failure alerts.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alert_email: Option<String>,
+    /// Active state flag.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active: Option<bool>,
+}
+
+/// Request parameters to update a Webhook via `PUT /v1/webhooks/{id}` or `PATCH /v2/accounts/{id}/webhooks/{id}`.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UpdateWebhookRequest {
+    /// Updated destination URL.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    /// Updated events list.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub events: Option<Vec<String>>,
+    /// Updated secret.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub secret: Option<String>,
+    /// Updated alert email.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alert_email: Option<String>,
+    /// Updated active state flag.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active: Option<bool>,
+}
+
+/// Known standard Razorpay Webhook event types.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum WebhookEventType {
+    /// Payment authorized.
+    #[serde(rename = "payment.authorized")]
+    PaymentAuthorized,
+    /// Payment captured.
+    #[serde(rename = "payment.captured")]
+    PaymentCaptured,
+    /// Payment failed.
+    #[serde(rename = "payment.failed")]
+    PaymentFailed,
+    /// Order paid in full.
+    #[serde(rename = "order.paid")]
+    OrderPaid,
+    /// Invoice paid.
+    #[serde(rename = "invoice.paid")]
+    InvoicePaid,
+    /// Subscription authenticated.
+    #[serde(rename = "subscription.authenticated")]
+    SubscriptionAuthenticated,
+    /// Subscription activated.
+    #[serde(rename = "subscription.activated")]
+    SubscriptionActivated,
+    /// Subscription charged successfully.
+    #[serde(rename = "subscription.charged")]
+    SubscriptionCharged,
+    /// Subscription completed.
+    #[serde(rename = "subscription.completed")]
+    SubscriptionCompleted,
+    /// Subscription paused.
+    #[serde(rename = "subscription.paused")]
+    SubscriptionPaused,
+    /// Subscription resumed.
+    #[serde(rename = "subscription.resumed")]
+    SubscriptionResumed,
+    /// Subscription cancelled.
+    #[serde(rename = "subscription.cancelled")]
+    SubscriptionCancelled,
+    /// Refund processed successfully.
+    #[serde(rename = "refund.processed")]
+    RefundProcessed,
+    /// Refund failed.
+    #[serde(rename = "refund.failed")]
+    RefundFailed,
+    /// Dispute created / opened.
+    #[serde(rename = "dispute.created")]
+    DisputeCreated,
+    /// Dispute won by merchant.
+    #[serde(rename = "dispute.won")]
+    DisputeWon,
+    /// Dispute lost by merchant.
+    #[serde(rename = "dispute.lost")]
+    DisputeLost,
+    /// Dispute closed.
+    #[serde(rename = "dispute.closed")]
+    DisputeClosed,
+    /// Other unmapped event type.
+    #[serde(other)]
+    Unknown,
+}
+
+/// Container wrapping a typed entity inside a webhook payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct WebhookEntityContainer<T> {
+    /// The nested entity object.
+    pub entity: T,
+}
+
+/// Entities payload map contained in an incoming webhook event.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct WebhookEntities {
+    /// Nested payment entity if present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payment: Option<WebhookEntityContainer<Payment>>,
+    /// Nested order entity if present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order: Option<WebhookEntityContainer<Order>>,
+    /// Nested subscription entity if present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subscription: Option<WebhookEntityContainer<Subscription>>,
+    /// Nested refund entity if present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refund: Option<WebhookEntityContainer<Refund>>,
+    /// Nested dispute entity if present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dispute: Option<WebhookEntityContainer<Dispute>>,
+    /// Nested invoice entity if present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub invoice: Option<WebhookEntityContainer<Invoice>>,
+    /// Nested virtual account entity if present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub virtual_account: Option<WebhookEntityContainer<VirtualAccount>>,
+}
+
+/// Standard Razorpay Webhook Event payload envelope.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WebhookPayload {
+    /// Entity name, always `"event"`.
+    #[serde(default)]
+    pub entity: String,
+    /// Account ID owning the webhook.
+    #[serde(default)]
+    pub account_id: String,
+    /// Event name string (e.g. `"payment.captured"`).
+    pub event: String,
+    /// List of entities contained in the payload.
+    #[serde(default)]
+    pub contains: Vec<String>,
+    /// Nested entity payloads.
+    pub payload: WebhookEntities,
+    /// UNIX timestamp when event was generated.
+    #[serde(default)]
+    pub created_at: u64,
 }
