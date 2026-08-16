@@ -100,12 +100,23 @@ pub fn verify_subscription_payment_signature(
 }
 
 /// Helper struct for type-safe Checkout payment signature verification.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PaymentSignatureVerification<'a> {
     pub order_id: &'a str,
     pub payment_id: &'a str,
     pub signature: &'a str,
     pub secret: &'a str,
+}
+
+impl std::fmt::Debug for PaymentSignatureVerification<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PaymentSignatureVerification")
+            .field("order_id", &self.order_id)
+            .field("payment_id", &self.payment_id)
+            .field("signature", &self.signature)
+            .field("secret", &"[REDACTED]")
+            .finish()
+    }
 }
 
 impl<'a> PaymentSignatureVerification<'a> {
@@ -115,12 +126,23 @@ impl<'a> PaymentSignatureVerification<'a> {
 }
 
 /// Helper struct for type-safe Subscription payment signature verification.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SubscriptionPaymentSignatureVerification<'a> {
     pub payment_id: &'a str,
     pub subscription_id: &'a str,
     pub signature: &'a str,
     pub secret: &'a str,
+}
+
+impl std::fmt::Debug for SubscriptionPaymentSignatureVerification<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SubscriptionPaymentSignatureVerification")
+            .field("payment_id", &self.payment_id)
+            .field("subscription_id", &self.subscription_id)
+            .field("signature", &self.signature)
+            .field("secret", &"[REDACTED]")
+            .finish()
+    }
 }
 
 impl<'a> SubscriptionPaymentSignatureVerification<'a> {
@@ -163,7 +185,7 @@ pub fn verify_payment_link_signature(
 }
 
 /// Helper struct for type-safe Payment Link signature verification.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PaymentLinkSignatureVerification<'a> {
     pub payment_link_id: &'a str,
     pub payment_link_reference_id: &'a str,
@@ -171,6 +193,19 @@ pub struct PaymentLinkSignatureVerification<'a> {
     pub payment_id: &'a str,
     pub signature: &'a str,
     pub secret: &'a str,
+}
+
+impl std::fmt::Debug for PaymentLinkSignatureVerification<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PaymentLinkSignatureVerification")
+            .field("payment_link_id", &self.payment_link_id)
+            .field("payment_link_reference_id", &self.payment_link_reference_id)
+            .field("payment_link_status", &self.payment_link_status)
+            .field("payment_id", &self.payment_id)
+            .field("signature", &self.signature)
+            .field("secret", &"[REDACTED]")
+            .finish()
+    }
 }
 
 impl<'a> PaymentLinkSignatureVerification<'a> {

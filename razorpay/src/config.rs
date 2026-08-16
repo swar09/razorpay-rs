@@ -8,7 +8,7 @@ pub const DEFAULT_BASE_URL: &str = "https://api.razorpay.com/v1";
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Runtime configuration for the Razorpay client.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RazorpayConfig {
     /// Razorpay Key ID (API Key).
     pub key_id: String,
@@ -18,6 +18,17 @@ pub struct RazorpayConfig {
     pub base_url: Url,
     /// Request timeout duration.
     pub timeout: Duration,
+}
+
+impl std::fmt::Debug for RazorpayConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RazorpayConfig")
+            .field("key_id", &self.key_id)
+            .field("key_secret", &"[REDACTED]")
+            .field("base_url", &self.base_url)
+            .field("timeout", &self.timeout)
+            .finish()
+    }
 }
 
 impl RazorpayConfig {

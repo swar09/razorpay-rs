@@ -75,3 +75,23 @@ async fn test_client_with_account_sub_merchant() {
 
     assert_eq!(sub_client.config().key_id, "rzp_test_key");
 }
+
+#[test]
+fn test_client_and_config_debug_redaction() {
+    let secret = "super_confidential_secret_998877";
+    let client = RazorpayClient::new("rzp_test_key", secret).unwrap();
+
+    let client_debug = format!("{:?}", client);
+    assert!(
+        !client_debug.contains(secret),
+        "Client Debug should not leak API key secret"
+    );
+    assert!(client_debug.contains("[REDACTED]"));
+
+    let config_debug = format!("{:?}", client.config());
+    assert!(
+        !config_debug.contains(secret),
+        "Config Debug should not leak API key secret"
+    );
+    assert!(config_debug.contains("[REDACTED]"));
+}

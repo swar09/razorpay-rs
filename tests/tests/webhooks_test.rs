@@ -218,3 +218,40 @@ fn test_verify_payment_link_signature_valid() {
         .verify()
         .expect("Verifier helper struct should succeed");
 }
+
+#[test]
+fn test_signature_verifier_debug_redaction() {
+    let secret = "very_confidential_webhook_or_api_secret_123";
+
+    let p_verifier = razorpay::webhooks::PaymentSignatureVerification {
+        order_id: "order_123",
+        payment_id: "pay_123",
+        signature: "sig_123",
+        secret,
+    };
+    let debug_str = format!("{:?}", p_verifier);
+    assert!(!debug_str.contains(secret));
+    assert!(debug_str.contains("[REDACTED]"));
+
+    let s_verifier = razorpay::webhooks::SubscriptionPaymentSignatureVerification {
+        payment_id: "pay_123",
+        subscription_id: "sub_123",
+        signature: "sig_123",
+        secret,
+    };
+    let debug_str = format!("{:?}", s_verifier);
+    assert!(!debug_str.contains(secret));
+    assert!(debug_str.contains("[REDACTED]"));
+
+    let pl_verifier = razorpay::webhooks::PaymentLinkSignatureVerification {
+        payment_link_id: "plink_123",
+        payment_link_reference_id: "ref_123",
+        payment_link_status: "paid",
+        payment_id: "pay_123",
+        signature: "sig_123",
+        secret,
+    };
+    let debug_str = format!("{:?}", pl_verifier);
+    assert!(!debug_str.contains(secret));
+    assert!(debug_str.contains("[REDACTED]"));
+}
