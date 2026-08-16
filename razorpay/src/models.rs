@@ -1156,6 +1156,26 @@ pub struct ReverseTransferRequest {
     pub reverse_all: Option<u8>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EditTransferRequest {
+    pub on_hold: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub on_hold_until: Option<u64>,
+}
+
+/// Razorpay Stakeholder entity for linked accounts (`entity: "stakeholder"`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Stakeholder {
+    pub id: String,
+    pub entity: String,
+    pub name: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub relationship: Option<HashMap<String, serde_json::Value>>,
+    pub notes: Option<Notes>,
+    pub created_at: u64,
+}
+
 // Virtual Accounts (Smart Collect)
 // https://razorpay.com/docs/api/payments/smart-collect/entity
 

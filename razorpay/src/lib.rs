@@ -28,7 +28,7 @@ pub use client::{RazorpayClient, RazorpayClientBuilder};
 pub use config::RazorpayConfig;
 pub use error::{RazorpayError, RazorpayResult};
 pub use resources::{
-    Addons, CustomerTokens, Customers, Invoices, Orders, PaymentLinks, Payments, Plans, Refunds,
-    Subscriptions, Tokens,
+    Accounts, Addons, CustomerTokens, Customers, Invoices, Orders, PaymentLinks, Payments, Plans,
+    Refunds, Settlements, Stakeholders, Subscriptions, Tokens, Transfers,
 };
 pub use traits::{Creatable, Deletable, Fetchable, Listable, Updatable};

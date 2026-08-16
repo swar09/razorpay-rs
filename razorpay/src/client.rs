@@ -84,6 +84,21 @@ impl RazorpayClient {
     pub fn addons(&self) -> crate::resources::addons::Addons {
         crate::resources::addons::Addons::new(Arc::clone(&self.http))
     }
+
+    /// Access Settlements resource operations (`/v1/settlements`).
+    pub fn settlements(&self) -> crate::resources::settlements::Settlements {
+        crate::resources::settlements::Settlements::new(Arc::clone(&self.http))
+    }
+
+    /// Access Transfers (Route) resource operations (`/v1/transfers`).
+    pub fn transfers(&self) -> crate::resources::transfers::Transfers {
+        crate::resources::transfers::Transfers::new(Arc::clone(&self.http))
+    }
+
+    /// Access Linked Accounts (Route) resource operations (`/v2/accounts`).
+    pub fn accounts(&self) -> crate::resources::accounts::Accounts {
+        crate::resources::accounts::Accounts::new(Arc::clone(&self.http))
+    }
 }
 
 /// Builder for constructing a configured [`RazorpayClient`].
