@@ -249,13 +249,28 @@ impl RazorpayClient {
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Debug, Default, Clone)]
+#[derive(Default, Clone)]
 pub struct RazorpayClientBuilder {
     key_id: Option<String>,
     key_secret: Option<String>,
     base_url: Option<Url>,
     timeout: Option<Duration>,
     custom_client: Option<reqwest::Client>,
+}
+
+impl std::fmt::Debug for RazorpayClientBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RazorpayClientBuilder")
+            .field("key_id", &self.key_id)
+            .field(
+                "key_secret",
+                &self.key_secret.as_ref().map(|_| "[REDACTED]"),
+            )
+            .field("base_url", &self.base_url)
+            .field("timeout", &self.timeout)
+            .field("custom_client", &self.custom_client)
+            .finish()
+    }
 }
 
 impl RazorpayClientBuilder {

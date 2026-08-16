@@ -259,12 +259,14 @@ pub enum PaymentRefundStatus {
 }
 
 /// Payment method used by the customer.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum PaymentMethod {
     /// Credit or debit card.
+    #[default]
     Card,
     /// Internet banking.
+    #[serde(rename = "netbanking")]
     NetBanking,
     /// Digital wallet (e.g., Paytm, Mobikwik).
     Wallet,
@@ -278,6 +280,15 @@ pub enum PaymentMethod {
     Paylater,
     /// Automated Clearing House / e-NACH mandate.
     Ach,
+    /// National Automated Clearing House (e-NACH).
+    Nach,
+    /// Smart Collect / virtual account bank transfer.
+    BankTransfer,
+    /// International bank transfer.
+    IntlBankTransfer,
+    /// Any payment method string not yet mapped by this SDK.
+    #[serde(other)]
+    Other,
 }
 
 /// Card details returned when expanding payment cards (`expand[]=card`).

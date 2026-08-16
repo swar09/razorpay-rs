@@ -94,4 +94,14 @@ fn test_client_and_config_debug_redaction() {
         "Config Debug should not leak API key secret"
     );
     assert!(config_debug.contains("[REDACTED]"));
+
+    let builder = RazorpayClientBuilder::new()
+        .key_id("rzp_test_key")
+        .key_secret(secret);
+    let builder_debug = format!("{:?}", builder);
+    assert!(
+        !builder_debug.contains(secret),
+        "Builder Debug should not leak API key secret"
+    );
+    assert!(builder_debug.contains("[REDACTED]"));
 }
