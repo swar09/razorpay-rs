@@ -14,20 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install rustfmt and clippy
 RUN rustup component add rustfmt clippy
 
-# Copy dependency manifests first for layer caching
-COPY Cargo.toml Cargo.lock ./
-COPY razorpay/Cargo.toml ./razorpay/
-COPY tests/Cargo.toml ./tests/
-COPY examples/Cargo.toml ./examples/
-
-# Create stub source files to cache dependencies
-RUN mkdir -p razorpay/src tests/src tests/tests examples/src/bin && \
-    echo "pub fn dummy() {}" > razorpay/src/lib.rs && \
-    echo "fn main() {}" > examples/src/bin/quickstart.rs && \
-    echo "fn main() {}" > examples/src/bin/create_order.rs && \
-    echo "pub fn dummy() {}" > tests/src/lib.rs && \
-    cargo build --workspace || true
-
 # Copy full source tree
 COPY . .
 
