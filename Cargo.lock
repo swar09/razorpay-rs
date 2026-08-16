@@ -862,7 +862,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
-name = "razorpay"
+name = "razorpay-examples"
+version = "0.1.0"
+dependencies = [
+ "dotenvy",
+ "razorpay-rs",
+ "tokio",
+]
+
+[[package]]
+name = "razorpay-rs"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -879,22 +888,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "razorpay-examples"
-version = "0.1.0"
-dependencies = [
- "dotenvy",
- "razorpay",
- "tokio",
-]
-
-[[package]]
 name = "razorpay-tests"
 version = "0.1.0"
 dependencies = [
  "dotenvy",
  "hex",
  "hmac",
- "razorpay",
+ "razorpay-rs",
  "serde",
  "serde_json",
  "sha2",

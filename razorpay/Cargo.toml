@@ -1,9 +1,16 @@
 [package]
-name = "razorpay"
-version = "0.1.0"
-edition = "2024"
+name = "razorpay-rs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
 description = "Async, type-safe Rust SDK for the Razorpay API"
-license = "MIT OR Apache-2.0"
+
+[lib]
+name = "razorpay"
+path = "src/lib.rs"
 
 [dependencies]
 async-trait = "0.1"

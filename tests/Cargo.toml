@@ -1,14 +1,15 @@
 [package]
 name = "razorpay-tests"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 publish = false
 
 [dependencies]
 dotenvy = "0.15"
 hex = "0.4"
 hmac = "0.12"
-razorpay = { path = "../razorpay" }
+razorpay = { package = "razorpay-rs", path = "../razorpay" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
