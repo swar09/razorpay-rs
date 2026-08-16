@@ -32,7 +32,7 @@ impl Accounts {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<LinkedAccount> {
-        self.http.post("../v2/accounts", data, extra_headers).await
+        self.http.post_v2("accounts", data, extra_headers).await
     }
 
     /// Edit a linked account (`PATCH /v2/accounts/{account_id}`).
@@ -42,8 +42,8 @@ impl Accounts {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<LinkedAccount> {
-        let path = format!("../v2/accounts/{}", account_id);
-        self.http.patch(&path, data, extra_headers).await
+        let path = format!("accounts/{}", account_id);
+        self.http.patch_v2(&path, data, extra_headers).await
     }
 }
 
@@ -57,9 +57,9 @@ impl Fetchable for Accounts {
         account_id: &str,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<Self::Item> {
-        let path = format!("../v2/accounts/{}", account_id);
+        let path = format!("accounts/{}", account_id);
         self.http
-            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .get_v2::<Self::Item, ()>(&path, None, extra_headers)
             .await
     }
 }
@@ -74,7 +74,7 @@ impl Deletable for Accounts {
         account_id: &str,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<Self::Response> {
-        let path = format!("../v2/accounts/{}", account_id);
-        self.http.delete(&path, extra_headers).await
+        let path = format!("accounts/{}", account_id);
+        self.http.delete_v2(&path, extra_headers).await
     }
 }

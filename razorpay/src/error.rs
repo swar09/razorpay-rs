@@ -30,6 +30,10 @@ pub enum RazorpayError {
     /// URL parsing error.
     #[error("invalid URL: {0}")]
     Url(#[from] url::ParseError),
+
+    /// Standard I/O error (e.g. reading files for document uploads).
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
 }
 
 impl From<crate::models::RazorpayError> for RazorpayError {

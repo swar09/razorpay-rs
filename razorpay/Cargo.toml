@@ -5,8 +5,11 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-readme.workspace = true
+documentation.workspace = true
+readme = "../README.md"
 description = "Async, type-safe Rust SDK for the Razorpay API"
+keywords.workspace = true
+categories.workspace = true
 
 [lib]
 name = "razorpay"

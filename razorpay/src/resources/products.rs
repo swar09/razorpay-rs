@@ -25,8 +25,8 @@ impl Products {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<ProductConfiguration> {
-        let path = format!("../v2/accounts/{}/products", account_id);
-        self.http.post(&path, data, extra_headers).await
+        let path = format!("accounts/{}/products", account_id);
+        self.http.post_v2(&path, data, extra_headers).await
     }
 
     /// Fetch product configuration for a linked account (`GET /v2/accounts/{account_id}/products/{product_id}`).
@@ -36,9 +36,9 @@ impl Products {
         product_id: &str,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<ProductConfiguration> {
-        let path = format!("../v2/accounts/{}/products/{}", account_id, product_id);
+        let path = format!("accounts/{}/products/{}", account_id, product_id);
         self.http
-            .get::<ProductConfiguration, ()>(&path, None, extra_headers)
+            .get_v2::<ProductConfiguration, ()>(&path, None, extra_headers)
             .await
     }
 
@@ -50,8 +50,8 @@ impl Products {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<ProductConfiguration> {
-        let path = format!("../v2/accounts/{}/products/{}", account_id, product_id);
-        self.http.patch(&path, data, extra_headers).await
+        let path = format!("accounts/{}/products/{}", account_id, product_id);
+        self.http.patch_v2(&path, data, extra_headers).await
     }
 
     /// Fetch terms and conditions for a product (`GET /v2/products/{product_name}/tnc`).
@@ -60,9 +60,9 @@ impl Products {
         product_name: &str,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<TncResponse> {
-        let path = format!("../v2/products/{}/tnc", product_name);
+        let path = format!("products/{}/tnc", product_name);
         self.http
-            .get::<TncResponse, ()>(&path, None, extra_headers)
+            .get_v2::<TncResponse, ()>(&path, None, extra_headers)
             .await
     }
 }

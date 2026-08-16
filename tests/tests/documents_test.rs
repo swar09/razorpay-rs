@@ -47,3 +47,37 @@ async fn test_documents_fetch() {
     assert_eq!(doc.id, "doc_123");
     assert_eq!(doc.name, "kyc_pan.pdf");
 }
+
+#[tokio::test]
+async fn test_documents_upload_from_bytes() {
+    let mock_server = MockServer::start().await;
+    let client = create_test_client(&mock_server.uri()).await;
+
+    let expected_doc = Document {
+        id: "doc_new_999".to_string(),
+        entity: "document".to_string(),
+        name: "dispute_evidence.pdf".to_string(),
+        document_type: "dispute_evidence".to_string(),
+        document_category: Some("dispute".to_string()),
+        url: Some("https://rzp.io/docs/doc_new_999.pdf".to_string()),
+        size: Some(512),
+        created_at: 1600000000,
+    };
+
+    Mock::given(method("POST"))
+        .and(path("/documents"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&expected_doc))
+        .mount(&mock_server)
+        .await;
+
+    let file_bytes = b"%PDF-1.4 Mock PDF Content".to_vec();
+    let doc = client
+        .documents()
+        .create_from_bytes(file_bytes, "dispute_evidence.pdf", "dispute_evidence", None)
+        .await
+        .expect("Document upload should succeed");
+
+    assert_eq!(doc.id, "doc_new_999");
+    assert_eq!(doc.name, "dispute_evidence.pdf");
+}

@@ -17,6 +17,14 @@ pub(crate) struct Http {
     pub(crate) config: RazorpayConfig,
 }
 
+/// Target API version for Razorpay endpoints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
+pub(crate) enum ApiVersion {
+    V1,
+    V2,
+}
+
 #[allow(dead_code)]
 impl Http {
     pub(crate) fn new(config: RazorpayConfig) -> RazorpayResult<Self> {
@@ -28,10 +36,32 @@ impl Http {
         Self { client, config }
     }
 
-    fn build_url(&self, path: &str) -> RazorpayResult<Url> {
+    pub(crate) fn build_versioned_url(&self, version: ApiVersion, path: &str) -> RazorpayResult<Url> {
         let clean_path = path.trim_start_matches('/');
-        // If the base URL doesn't end with a slash, appending directly might replace the last segment in standard Url::join.
-        // Ensuring a trailing slash on base URL ensures correct endpoint routing.
+        let ver = match version {
+            ApiVersion::V1 => "v1",
+            ApiVersion::V2 => "v2",
+        };
+        let mut base = self.config.base_url.clone();
+        let base_path = base
+            .path()
+            .trim_end_matches('/')
+            .trim_end_matches("/v1")
+            .trim_end_matches("/v2");
+        let new_path = if base_path.is_empty() {
+            format!("/{}/{}", ver, clean_path)
+        } else {
+            format!("{}/{}/{}", base_path, ver, clean_path)
+        };
+        base.set_path(&new_path);
+        Ok(base)
+    }
+
+    fn build_url(&self, path: &str) -> RazorpayResult<Url> {
+        if let Some(rest) = path.strip_prefix("../v2/").or_else(|| path.strip_prefix("v2/")) {
+            return self.build_versioned_url(ApiVersion::V2, rest);
+        }
+        let clean_path = path.trim_start_matches('/');
         let mut base = self.config.base_url.clone();
         if !base.path().ends_with('/') {
             let mut new_path = base.path().to_string();
@@ -184,6 +214,90 @@ impl Http {
             .post(url)
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
             .multipart(form);
+
+        if let Some(headers) = extra_headers {
+            req = req.headers(headers);
+        }
+
+        let resp = req.send().await?;
+        self.handle_response(resp).await
+    }
+
+    pub(crate) async fn get_v2<T: DeserializeOwned, Q: Serialize + Sync>(
+        &self,
+        path: &str,
+        query: Option<&Q>,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<T> {
+        let url = self.build_versioned_url(ApiVersion::V2, path)?;
+        let mut req = self
+            .client
+            .get(url)
+            .basic_auth(&self.config.key_id, Some(&self.config.key_secret));
+
+        if let Some(q) = query {
+            req = req.query(q);
+        }
+        if let Some(headers) = extra_headers {
+            req = req.headers(headers);
+        }
+
+        let resp = req.send().await?;
+        self.handle_response(resp).await
+    }
+
+    pub(crate) async fn post_v2<B: Serialize + Sync, T: DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &B,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<T> {
+        let url = self.build_versioned_url(ApiVersion::V2, path)?;
+        let mut req = self
+            .client
+            .post(url)
+            .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
+            .json(body);
+
+        if let Some(headers) = extra_headers {
+            req = req.headers(headers);
+        }
+
+        let resp = req.send().await?;
+        self.handle_response(resp).await
+    }
+
+    pub(crate) async fn patch_v2<B: Serialize + Sync, T: DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &B,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<T> {
+        let url = self.build_versioned_url(ApiVersion::V2, path)?;
+        let mut req = self
+            .client
+            .patch(url)
+            .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
+            .json(body);
+
+        if let Some(headers) = extra_headers {
+            req = req.headers(headers);
+        }
+
+        let resp = req.send().await?;
+        self.handle_response(resp).await
+    }
+
+    pub(crate) async fn delete_v2<T: DeserializeOwned>(
+        &self,
+        path: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<T> {
+        let url = self.build_versioned_url(ApiVersion::V2, path)?;
+        let mut req = self
+            .client
+            .delete(url)
+            .basic_auth(&self.config.key_id, Some(&self.config.key_secret));
 
         if let Some(headers) = extra_headers {
             req = req.headers(headers);

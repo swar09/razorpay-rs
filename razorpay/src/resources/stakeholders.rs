@@ -30,8 +30,8 @@ impl Stakeholders {
         data: &T,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<Stakeholder> {
-        let path = format!("../v2/accounts/{}/stakeholders", self.account_id);
-        self.http.post(&path, data, extra_headers).await
+        let path = format!("accounts/{}/stakeholders", self.account_id);
+        self.http.post_v2(&path, data, extra_headers).await
     }
 
     /// Update a stakeholder on this linked account (`PATCH /v2/accounts/{account_id}/stakeholders/{stakeholder_id}`).
@@ -42,10 +42,10 @@ impl Stakeholders {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<Stakeholder> {
         let path = format!(
-            "../v2/accounts/{}/stakeholders/{}",
+            "accounts/{}/stakeholders/{}",
             self.account_id, stakeholder_id
         );
-        self.http.patch(&path, data, extra_headers).await
+        self.http.patch_v2(&path, data, extra_headers).await
     }
 }
 
@@ -60,11 +60,11 @@ impl Fetchable for Stakeholders {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<Self::Item> {
         let path = format!(
-            "../v2/accounts/{}/stakeholders/{}",
+            "accounts/{}/stakeholders/{}",
             self.account_id, stakeholder_id
         );
         self.http
-            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .get_v2::<Self::Item, ()>(&path, None, extra_headers)
             .await
     }
 }
@@ -79,7 +79,7 @@ impl Listable for Stakeholders {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        let path = format!("../v2/accounts/{}/stakeholders", self.account_id);
-        self.http.get(&path, query.as_ref(), extra_headers).await
+        let path = format!("accounts/{}/stakeholders", self.account_id);
+        self.http.get_v2(&path, query.as_ref(), extra_headers).await
     }
 }
