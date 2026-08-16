@@ -1,5 +1,7 @@
+use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
 use reqwest::header::HeaderMap;
 use serde::{Serialize, de::DeserializeOwned};
+use std::fmt;
 use url::Url;
 
 use crate::{
@@ -10,11 +12,66 @@ use crate::{
 
 /// Internal HTTP client wrapper around `reqwest::Client`.
 /// Manages basic auth credentials, base URL joining, and response error parsing.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 #[allow(dead_code)]
 pub(crate) struct Http {
     pub(crate) client: reqwest::Client,
     pub(crate) config: RazorpayConfig,
+}
+
+impl fmt::Debug for Http {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Http")
+            .field("client", &self.client)
+            .field("config", &self.config)
+            .finish()
+    }
+}
+
+const PATH_SEGMENT: &AsciiSet = &CONTROLS
+    .add(b'/')
+    .add(b'?')
+    .add(b'#')
+    .add(b'%')
+    .add(b' ')
+    .add(b'"')
+    .add(b'<')
+    .add(b'>')
+    .add(b'`')
+    .add(b'.');
+
+fn encode_path_segment(segment: &str) -> RazorpayResult<String> {
+    if segment.is_empty() || segment == "." || segment == ".." {
+        return Err(RazorpayError::InvalidInput(format!(
+            "invalid path segment: {segment:?}"
+        )));
+    }
+    if segment.contains('/') || segment.contains('\\') {
+        return Err(RazorpayError::InvalidInput(format!(
+            "invalid path segment: {segment:?}"
+        )));
+    }
+    Ok(utf8_percent_encode(segment, PATH_SEGMENT).to_string())
+}
+
+fn parse_encoded_path(path: &str) -> RazorpayResult<Vec<String>> {
+    path.trim_start_matches('/')
+        .split('/')
+        .filter(|segment| !segment.is_empty())
+        .map(encode_path_segment)
+        .collect()
+}
+
+fn append_encoded_path(base: &Url, segments: &[String]) -> RazorpayResult<Url> {
+    let mut url = base.clone();
+    let base_path = url.path().trim_end_matches('/');
+    let new_path = if base_path.is_empty() {
+        format!("/{}", segments.join("/"))
+    } else {
+        format!("{}/{}", base_path, segments.join("/"))
+    };
+    url.set_path(&new_path);
+    Ok(url)
 }
 
 /// Target API version for Razorpay endpoints.
@@ -41,24 +98,41 @@ impl Http {
         version: ApiVersion,
         path: &str,
     ) -> RazorpayResult<Url> {
-        let clean_path = path.trim_start_matches('/');
         let ver = match version {
             ApiVersion::V1 => "v1",
             ApiVersion::V2 => "v2",
         };
-        let mut base = self.config.base_url.clone();
-        let base_path = base
-            .path()
-            .trim_end_matches('/')
-            .trim_end_matches("/v1")
-            .trim_end_matches("/v2");
-        let new_path = if base_path.is_empty() {
-            format!("/{}/{}", ver, clean_path)
+        let mut segments = parse_encoded_path(path)?;
+        if segments.is_empty() {
+            return Err(RazorpayError::InvalidInput("empty API path".into()));
+        }
+
+        let url = self.config.base_url.clone();
+        let existing = url.path().trim_end_matches('/');
+        let stripped = existing
+            .strip_suffix("/v1")
+            .or_else(|| existing.strip_suffix("/v2"))
+            .unwrap_or(existing);
+
+        let mut prefix_segments: Vec<String> = if stripped.is_empty() {
+            Vec::new()
         } else {
-            format!("{}/{}/{}", base_path, ver, clean_path)
+            stripped
+                .trim_start_matches('/')
+                .split('/')
+                .filter(|segment| !segment.is_empty())
+                .map(str::to_string)
+                .collect()
         };
-        base.set_path(&new_path);
-        Ok(base)
+
+        prefix_segments.push(ver.to_string());
+        prefix_segments.append(&mut segments);
+
+        let mut origin = url.clone();
+        origin.set_path("");
+        origin.set_query(None);
+        origin.set_fragment(None);
+        append_encoded_path(&origin, &prefix_segments)
     }
 
     fn build_url(&self, path: &str) -> RazorpayResult<Url> {
@@ -68,14 +142,13 @@ impl Http {
         {
             return self.build_versioned_url(ApiVersion::V2, rest);
         }
-        let clean_path = path.trim_start_matches('/');
-        let mut base = self.config.base_url.clone();
-        if !base.path().ends_with('/') {
-            let mut new_path = base.path().to_string();
-            new_path.push('/');
-            base.set_path(&new_path);
+
+        let segments = parse_encoded_path(path)?;
+        if segments.is_empty() {
+            return Err(RazorpayError::InvalidInput("empty API path".into()));
         }
-        base.join(clean_path).map_err(RazorpayError::Url)
+
+        append_encoded_path(&self.config.base_url, &segments)
     }
 
     async fn handle_response<T: DeserializeOwned>(
@@ -499,6 +572,43 @@ mod tests {
             }
             other => panic!("Expected RazorpayError::Api, got {:?}", other),
         }
+    }
+
+    #[test]
+    fn test_build_url_encodes_malicious_ids() {
+        let http = create_test_http("http://localhost/");
+
+        let ok_url = http
+            .build_url("orders/order_ok123")
+            .expect("valid order path should build");
+        assert_eq!(ok_url.as_str(), "http://localhost/orders/order_ok123");
+
+        let traversal_url = http.build_url("orders/../payments/pay_secret");
+        assert!(matches!(
+            traversal_url,
+            Err(RazorpayError::InvalidInput(_))
+        ));
+
+        let query_url = http
+            .build_url("orders/order_1?expand[]=card")
+            .expect("encoded query injection attempt should build a literal path");
+        assert_eq!(
+            query_url.as_str(),
+            "http://localhost/orders/order_1%3Fexpand[]=card"
+        );
+
+        let space_url = http
+            .build_url("orders/order 1")
+            .expect("space in id should build");
+        assert_eq!(space_url.as_str(), "http://localhost/orders/order%201");
+    }
+
+    #[test]
+    fn test_http_debug_redacts_key_secret() {
+        let http = create_test_http("http://localhost/");
+        let debug = format!("{http:?}");
+        assert!(!debug.contains("test_secret"));
+        assert!(debug.contains("[REDACTED]"));
     }
 
     #[tokio::test]

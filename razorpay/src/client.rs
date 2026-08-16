@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{fmt, sync::Arc, time::Duration};
 use url::Url;
 
 use crate::{
@@ -23,9 +23,17 @@ use crate::{
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RazorpayClient {
     pub(crate) http: Arc<Http>,
+}
+
+impl fmt::Debug for RazorpayClient {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RazorpayClient")
+            .field("http", &self.http)
+            .finish()
+    }
 }
 
 impl RazorpayClient {
@@ -222,13 +230,28 @@ impl RazorpayClient {
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Debug, Default, Clone)]
+#[derive(Default, Clone)]
 pub struct RazorpayClientBuilder {
     key_id: Option<String>,
     key_secret: Option<String>,
     base_url: Option<Url>,
     timeout: Option<Duration>,
     custom_client: Option<reqwest::Client>,
+}
+
+impl fmt::Debug for RazorpayClientBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RazorpayClientBuilder")
+            .field("key_id", &self.key_id)
+            .field(
+                "key_secret",
+                &self.key_secret.as_ref().map(|_| "[REDACTED]"),
+            )
+            .field("base_url", &self.base_url)
+            .field("timeout", &self.timeout)
+            .field("custom_client", &self.custom_client.as_ref().map(|_| "[REDACTED]"))
+            .finish()
+    }
 }
 
 impl RazorpayClientBuilder {
@@ -296,5 +319,21 @@ impl RazorpayClientBuilder {
         Ok(RazorpayClient {
             http: Arc::new(http),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn builder_debug_redacts_key_secret() {
+        let builder = RazorpayClientBuilder::new()
+            .key_id("rzp_test_key")
+            .key_secret("super_secret_value");
+
+        let debug = format!("{builder:?}");
+        assert!(!debug.contains("super_secret_value"));
+        assert!(debug.contains("[REDACTED]"));
     }
 }

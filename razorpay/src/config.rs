@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{fmt, time::Duration};
 use url::Url;
 
 /// Default Razorpay API base URL.
@@ -8,7 +8,7 @@ pub const DEFAULT_BASE_URL: &str = "https://api.razorpay.com/v1";
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Runtime configuration for the Razorpay client.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RazorpayConfig {
     /// Razorpay Key ID (API Key).
     pub key_id: String,
@@ -18,6 +18,17 @@ pub struct RazorpayConfig {
     pub base_url: Url,
     /// Request timeout duration.
     pub timeout: Duration,
+}
+
+impl fmt::Debug for RazorpayConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RazorpayConfig")
+            .field("key_id", &self.key_id)
+            .field("key_secret", &"[REDACTED]")
+            .field("base_url", &self.base_url)
+            .field("timeout", &self.timeout)
+            .finish()
+    }
 }
 
 impl RazorpayConfig {
@@ -33,5 +44,24 @@ impl RazorpayConfig {
             base_url,
             timeout: DEFAULT_TIMEOUT,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn debug_redacts_key_secret() {
+        let config = RazorpayConfig {
+            key_id: "rzp_test_key".to_string(),
+            key_secret: "super_secret_value".to_string(),
+            base_url: Url::parse(DEFAULT_BASE_URL).unwrap(),
+            timeout: DEFAULT_TIMEOUT,
+        };
+
+        let debug = format!("{config:?}");
+        assert!(!debug.contains("super_secret_value"));
+        assert!(debug.contains("[REDACTED]"));
     }
 }

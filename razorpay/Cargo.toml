@@ -18,6 +18,7 @@ path = "src/lib.rs"
 [dependencies]
 async-trait = "0.1"
 hex = "0.4"
+percent-encoding = "2"
 hmac = "0.12"
 reqwest = { version = "0.12", features = ["json", "multipart"] }
 serde = { version = "1", features = ["derive"] }

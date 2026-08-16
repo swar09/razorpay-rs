@@ -265,6 +265,7 @@ pub enum PaymentMethod {
     /// Credit or debit card.
     Card,
     /// Internet banking.
+    #[serde(rename = "netbanking")]
     NetBanking,
     /// Digital wallet (e.g., Paytm, Mobikwik).
     Wallet,
@@ -278,6 +279,15 @@ pub enum PaymentMethod {
     Paylater,
     /// Automated Clearing House / e-NACH mandate.
     Ach,
+    /// National Automated Clearing House (e-NACH).
+    Nach,
+    /// Smart Collect / virtual account bank transfer.
+    BankTransfer,
+    /// International bank transfer.
+    IntlBankTransfer,
+    /// Any payment method string not yet mapped by this SDK.
+    #[serde(other)]
+    Other,
 }
 
 /// Card details returned when expanding payment cards (`expand[]=card`).
@@ -2756,4 +2766,44 @@ pub struct WebhookPayload {
     /// UNIX timestamp when event was generated.
     #[serde(default)]
     pub created_at: u64,
+}
+
+#[cfg(test)]
+mod payment_method_tests {
+    use super::PaymentMethod;
+
+    #[test]
+    fn deserializes_documented_payment_methods() {
+        let cases = [
+            ("\"card\"", PaymentMethod::Card),
+            ("\"netbanking\"", PaymentMethod::NetBanking),
+            ("\"wallet\"", PaymentMethod::Wallet),
+            ("\"emi\"", PaymentMethod::Emi),
+            ("\"upi\"", PaymentMethod::Upi),
+            ("\"cardless_emi\"", PaymentMethod::CardlessEmi),
+            ("\"paylater\"", PaymentMethod::Paylater),
+            ("\"ach\"", PaymentMethod::Ach),
+            ("\"nach\"", PaymentMethod::Nach),
+            ("\"bank_transfer\"", PaymentMethod::BankTransfer),
+            ("\"intl_bank_transfer\"", PaymentMethod::IntlBankTransfer),
+        ];
+
+        for (json, expected) in cases {
+            let method: PaymentMethod =
+                serde_json::from_str(json).unwrap_or_else(|err| panic!("{json}: {err}"));
+            assert_eq!(method, expected);
+        }
+    }
+
+    #[test]
+    fn deserializes_unknown_payment_method_as_other() {
+        let method: PaymentMethod = serde_json::from_str("\"paytm\"").unwrap();
+        assert_eq!(method, PaymentMethod::Other);
+    }
+
+    #[test]
+    fn serializes_netbanking_without_underscore() {
+        let json = serde_json::to_string(&PaymentMethod::NetBanking).unwrap();
+        assert_eq!(json, "\"netbanking\"");
+    }
 }
