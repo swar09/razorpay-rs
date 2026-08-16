@@ -2,7 +2,7 @@ use std::{sync::Arc, time::Duration};
 use url::Url;
 
 use crate::{
-    config::{RazorpayConfig, DEFAULT_BASE_URL, DEFAULT_TIMEOUT},
+    config::{DEFAULT_BASE_URL, DEFAULT_TIMEOUT, RazorpayConfig},
     error::{RazorpayError, RazorpayResult},
     http::Http,
 };
@@ -99,6 +99,41 @@ impl RazorpayClient {
     pub fn accounts(&self) -> crate::resources::accounts::Accounts {
         crate::resources::accounts::Accounts::new(Arc::clone(&self.http))
     }
+
+    /// Access Items resource operations (`/v1/items`).
+    pub fn items(&self) -> crate::resources::items::Items {
+        crate::resources::items::Items::new(Arc::clone(&self.http))
+    }
+
+    /// Access QR Codes resource operations (`/v1/payments/qr_codes`).
+    pub fn qr_codes(&self) -> crate::resources::qr_codes::QrCodes {
+        crate::resources::qr_codes::QrCodes::new(Arc::clone(&self.http))
+    }
+
+    /// Access Virtual Accounts (Smart Collect) resource operations (`/v1/virtual_accounts`).
+    pub fn virtual_accounts(&self) -> crate::resources::virtual_accounts::VirtualAccounts {
+        crate::resources::virtual_accounts::VirtualAccounts::new(Arc::clone(&self.http))
+    }
+
+    /// Access Disputes resource operations (`/v1/disputes`).
+    pub fn disputes(&self) -> crate::resources::disputes::Disputes {
+        crate::resources::disputes::Disputes::new(Arc::clone(&self.http))
+    }
+
+    /// Access RazorpayX Fund Accounts resource operations (`/v1/fund_accounts`).
+    pub fn fund_accounts(&self) -> crate::resources::fund_accounts::FundAccounts {
+        crate::resources::fund_accounts::FundAccounts::new(Arc::clone(&self.http))
+    }
+
+    /// Access RazorpayX Payouts resource operations (`/v1/payouts`).
+    pub fn payouts(&self) -> crate::resources::payouts::Payouts {
+        crate::resources::payouts::Payouts::new(Arc::clone(&self.http))
+    }
+
+    /// Access Documents resource operations (`/v1/documents`).
+    pub fn documents(&self) -> crate::resources::documents::Documents {
+        crate::resources::documents::Documents::new(Arc::clone(&self.http))
+    }
 }
 
 /// Builder for constructing a configured [`RazorpayClient`].
@@ -149,9 +184,7 @@ impl RazorpayClientBuilder {
 
     /// Build and return the initialized [`RazorpayClient`].
     pub fn build(self) -> RazorpayResult<RazorpayClient> {
-        let key_id = self
-            .key_id
-            .ok_or(RazorpayError::Config("missing key_id"))?;
+        let key_id = self.key_id.ok_or(RazorpayError::Config("missing key_id"))?;
         let key_secret = self
             .key_secret
             .ok_or(RazorpayError::Config("missing key_secret"))?;

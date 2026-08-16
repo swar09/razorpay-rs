@@ -1,9 +1,10 @@
 use razorpay::{
+    Creatable, Deletable, Fetchable, Listable, RazorpayClient,
     models::{
-        CreateCustomerRequest, CreateOrderRequest, CreatePaymentLinkRequest, CreatePlanItem,
-        CreatePlanRequest, CreateSubscriptionRequest, ListOptions, PlanPeriod,
+        CreateCustomerRequest, CreateItemRequest, CreateOrderRequest, CreatePaymentLinkRequest,
+        CreatePlanItem, CreatePlanRequest, CreateQrCodeRequest, CreateSubscriptionRequest,
+        ListOptions, PlanPeriod,
     },
-    Creatable, Fetchable, Listable, RazorpayClient,
 };
 use std::env;
 
@@ -24,7 +25,9 @@ fn get_live_client() -> Option<RazorpayClient> {
         || key_id.starts_with("test_key")
         || key_id == "rzp_test_key"
     {
-        eprintln!("Skipping live API test: RAZORPAY_KEY_ID / SECRET not configured with real keys.");
+        eprintln!(
+            "Skipping live API test: RAZORPAY_KEY_ID / SECRET not configured with real keys."
+        );
         return None;
     }
 
@@ -161,7 +164,10 @@ async fn test_live_payment_links_flow() {
         .await
         .expect("Live payment link creation should succeed");
 
-    println!("Live Payment Link Created: {} (URL: {})", link.id, link.short_url);
+    println!(
+        "Live Payment Link Created: {} (URL: {})",
+        link.id, link.short_url
+    );
     assert!(!link.id.is_empty());
     assert!(!link.short_url.is_empty());
 
@@ -219,7 +225,10 @@ async fn test_live_plans_and_subscriptions_flow() {
     assert_eq!(fetched_plan.id, plan.id);
 
     // Create Subscription on the plan
-    println!("Executing live Subscriptions::create on plan {}...", plan.id);
+    println!(
+        "Executing live Subscriptions::create on plan {}...",
+        plan.id
+    );
     let sub_req = CreateSubscriptionRequest {
         plan_id: plan.id.clone(),
         total_count: 6,
@@ -257,7 +266,102 @@ async fn test_live_plans_and_subscriptions_flow() {
         .await
         .expect("Live subscription cancellation should succeed");
 
-    println!("Live Subscription Cancelled. Status: {:?}", cancelled_sub.status);
+    println!(
+        "Live Subscription Cancelled. Status: {:?}",
+        cancelled_sub.status
+    );
+}
+
+#[tokio::test]
+#[ignore = "Live API test against api.razorpay.com. Run with: cargo test-live"]
+async fn test_live_items_and_qr_codes_flow() {
+    let client = match get_live_client() {
+        Some(c) => c,
+        None => return,
+    };
+
+    println!("Executing live Items::create against Razorpay API...");
+    let unique_timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    let item_req = CreateItemRequest {
+        name: format!("Live Item {}", unique_timestamp),
+        amount: 15000,
+        currency: "INR".to_string(),
+        description: Some("Live test item".to_string()),
+    };
+
+    let item = client
+        .items()
+        .create(item_req, None)
+        .await
+        .expect("Live item creation should succeed");
+
+    println!("Live Item Created with ID: {}", item.id);
+    assert!(!item.id.is_empty());
+
+    // Fetch Item
+    let fetched_item = client
+        .items()
+        .fetch(&item.id, None)
+        .await
+        .expect("Live item fetch should succeed");
+    assert_eq!(fetched_item.id, item.id);
+
+    // Delete Item
+    let del_resp = client
+        .items()
+        .delete(&item.id, None)
+        .await
+        .expect("Live item delete should succeed");
+    assert!(del_resp.deleted);
+
+    // Create QR Code
+    println!("Executing live QrCodes::create against Razorpay API...");
+    let qr_req = CreateQrCodeRequest {
+        qr_type: "upi_qr".to_string(),
+        name: Some(format!("Live QR {}", unique_timestamp)),
+        usage: "single_use".to_string(),
+        fixed_amount: true,
+        payment_amount: Some(10000),
+        description: Some("Live test QR code".to_string()),
+        customer_id: None,
+        close_by: None,
+        notes: None,
+    };
+
+    let qr = client
+        .qr_codes()
+        .create(qr_req, None)
+        .await
+        .expect("Live QR code creation should succeed");
+
+    println!("Live QR Code Created: {} (Image: {})", qr.id, qr.image_url);
+    assert!(!qr.id.is_empty());
+    assert!(!qr.image_url.is_empty());
+
+    // Fetch the created QR code
+    let fetched_qr = client
+        .qr_codes()
+        .fetch(&qr.id, None)
+        .await
+        .expect("Live QR code fetch should succeed");
+    assert_eq!(fetched_qr.id, qr.id);
+
+    // Also fetch the specific QR code referenced by the user
+    if let Ok(user_qr) = client.qr_codes().fetch("qr_TQHxzpli0YA1zu", None).await {
+        println!("Successfully fetched user QR code qr_TQHxzpli0YA1zu with status: {}", user_qr.status);
+    }
+
+    // Close the newly created QR Code
+    let closed_qr = client
+        .qr_codes()
+        .close(&qr.id, None)
+        .await
+        .expect("Live QR code close should succeed");
+    assert_eq!(closed_qr.status, "closed");
 }
 
 #[tokio::test]
@@ -272,7 +376,15 @@ async fn test_live_payments_and_invoices_listing() {
     println!("Executing live Payments::all against Razorpay API...");
     let payments = client
         .payments()
-        .all(Some(ListOptions { count: Some(5), skip: None, from: None, to: None }), None)
+        .all(
+            Some(ListOptions {
+                count: Some(5),
+                skip: None,
+                from: None,
+                to: None,
+            }),
+            None,
+        )
         .await
         .expect("Live payments list should succeed");
     println!("Live Payments count: {}", payments.count);
@@ -281,8 +393,44 @@ async fn test_live_payments_and_invoices_listing() {
     println!("Executing live Invoices::all against Razorpay API...");
     let invoices = client
         .invoices()
-        .all(Some(ListOptions { count: Some(5), skip: None, from: None, to: None }), None)
+        .all(
+            Some(ListOptions {
+                count: Some(5),
+                skip: None,
+                from: None,
+                to: None,
+            }),
+            None,
+        )
         .await
         .expect("Live invoices list should succeed");
     println!("Live Invoices count: {}", invoices.count);
+
+    // List settlements
+    println!("Executing live Settlements::all against Razorpay API...");
+    let settlements = client
+        .settlements()
+        .all(
+            Some(ListOptions {
+                count: Some(5),
+                skip: None,
+                from: None,
+                to: None,
+            }),
+            None,
+        )
+        .await
+        .expect("Live settlements list should succeed");
+    println!("Live Settlements count: {}", settlements.count);
+
+    // List transfers on recent payment if available
+    if let Some(recent_payment) = payments.items.first() {
+        println!("Fetching transfers for live payment {}...", recent_payment.id);
+        let payment_transfers = client
+            .payments()
+            .transfers(&recent_payment.id, None, None)
+            .await
+            .expect("Fetching payment transfers should succeed");
+        println!("Transfers on payment {}: {}", recent_payment.id, payment_transfers.count);
+    }
 }

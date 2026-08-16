@@ -7,7 +7,7 @@ use crate::{
     http::Http,
     models::{
         CapturePaymentRequest, CardDetails, CreateRefundRequest, ListOptions, Payment,
-        PaymentDowntime, RazorpayList, Refund, UpdatePaymentRequest,
+        PaymentDowntime, RazorpayList, Refund, Transfer, UpdatePaymentRequest,
     },
     traits::{Fetchable, Listable, Updatable},
 };
@@ -56,6 +56,17 @@ impl Payments {
         self.http.get(&path, query.as_ref(), extra_headers).await
     }
 
+    /// Fetch all transfers created for a specific payment (`GET /v1/payments/{payment_id}/transfers`).
+    pub async fn transfers(
+        &self,
+        payment_id: &str,
+        query: Option<ListOptions>,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<RazorpayList<Transfer>> {
+        let path = format!("payments/{}/transfers", payment_id);
+        self.http.get(&path, query.as_ref(), extra_headers).await
+    }
+
     /// Fetch card details of a payment (`GET /v1/payments/{payment_id}/card`).
     pub async fn card_details(
         &self,
@@ -63,7 +74,9 @@ impl Payments {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<CardDetails> {
         let path = format!("payments/{}/card", payment_id);
-        self.http.get::<CardDetails, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<CardDetails, ()>(&path, None, extra_headers)
+            .await
     }
 
     /// Fetch BankTransfer details associated with a payment (`GET /v1/payments/{payment_id}/bank_transfer`).
@@ -73,7 +86,9 @@ impl Payments {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<serde_json::Value> {
         let path = format!("payments/{}/bank_transfer", payment_id);
-        self.http.get::<serde_json::Value, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<serde_json::Value, ()>(&path, None, extra_headers)
+            .await
     }
 
     /// Fetch all payment downtime records (`GET /v1/payments/downtimes`).
@@ -82,7 +97,9 @@ impl Payments {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<PaymentDowntime>> {
-        self.http.get("payments/downtimes", query.as_ref(), extra_headers).await
+        self.http
+            .get("payments/downtimes", query.as_ref(), extra_headers)
+            .await
     }
 
     /// Fetch payment downtime record by its ID (`GET /v1/payments/downtimes/{downtime_id}`).
@@ -92,7 +109,9 @@ impl Payments {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<PaymentDowntime> {
         let path = format!("payments/downtimes/{}", downtime_id);
-        self.http.get::<PaymentDowntime, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<PaymentDowntime, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -101,9 +120,15 @@ impl Fetchable for Payments {
     type Item = Payment;
 
     /// Fetch a payment by its ID (`GET /v1/payments/{payment_id}`).
-    async fn fetch(&self, payment_id: &str, extra_headers: Option<HeaderMap>) -> RazorpayResult<Self::Item> {
+    async fn fetch(
+        &self,
+        payment_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Item> {
         let path = format!("payments/{}", payment_id);
-        self.http.get::<Self::Item, ()>(&path, None, extra_headers).await
+        self.http
+            .get::<Self::Item, ()>(&path, None, extra_headers)
+            .await
     }
 }
 
@@ -117,7 +142,9 @@ impl Listable for Payments {
         query: Option<ListOptions>,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
-        self.http.get("payments", query.as_ref(), extra_headers).await
+        self.http
+            .get("payments", query.as_ref(), extra_headers)
+            .await
     }
 }
 
