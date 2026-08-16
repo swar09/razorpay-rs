@@ -33,17 +33,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-clippy-
+      - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   test:
@@ -60,17 +50,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libssl-dev
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-test-
+      - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
 
   docker:
@@ -85,6 +65,8 @@ jobs:
           file: ./Dockerfile
           push: false
           tags: razorpay-rs:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   gitleaks:
     name: gitleaks
@@ -107,4 +89,3 @@ jobs:
       - uses: rustsec/audit-check@v1.4.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
