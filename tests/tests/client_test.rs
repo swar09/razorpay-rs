@@ -67,3 +67,11 @@ fn test_client_is_clone_and_send_sync() {
     fn assert_send_sync<T: Send + Sync + Clone>() {}
     assert_send_sync::<RazorpayClient>();
 }
+
+#[tokio::test]
+async fn test_client_with_account_sub_merchant() {
+    let client = RazorpayClient::new("rzp_test_key", "test_secret").unwrap();
+    let sub_client = client.with_account("acc_sub12345").unwrap();
+
+    assert_eq!(sub_client.config().key_id, "rzp_test_key");
+}

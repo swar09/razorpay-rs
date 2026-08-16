@@ -363,14 +363,17 @@ pub struct Payment {
     /// Associated invoice ID, if created against an invoice.
     pub invoice_id: Option<String>,
     /// Indicates if international payment method was used.
+    #[serde(default)]
     pub international: bool,
     /// Payment method used for the transaction.
     pub method: Option<PaymentMethod>,
     /// Total amount refunded back to the customer so far in smallest currency sub-units.
+    #[serde(default)]
     pub amount_refunded: u64,
     /// Refund status if any refund has been issued.
     pub refund_status: Option<PaymentRefundStatus>,
     /// Indicates if the payment has been captured.
+    #[serde(default)]
     pub captured: bool,
     /// Merchant transaction description.
     pub description: Option<String>,
@@ -495,9 +498,11 @@ pub struct Refund {
     /// Status of the refund.
     pub status: RefundStatus,
     /// Actual speed at which refund was processed by bank.
-    pub speed_processed: RefundSpeed,
+    #[serde(default)]
+    pub speed_processed: Option<RefundSpeed>,
     /// Speed tier requested when creating the refund.
-    pub speed_requested: RefundSpeed,
+    #[serde(default)]
+    pub speed_requested: Option<RefundSpeed>,
 }
 
 /// Request parameters to issue a refund via `POST /v1/refunds` or `POST /v1/payments/{id}/refund`.
@@ -2756,4 +2761,218 @@ pub struct WebhookPayload {
     /// UNIX timestamp when event was generated.
     #[serde(default)]
     pub created_at: u64,
+}
+
+// Payment Methods (https://razorpay.com/docs/api/payments/fetch-payment-methods/)
+
+/// Response returned by the Payment Methods endpoint (`GET /v1/methods`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PaymentMethods {
+    /// Entity name, typically `"methods"`.
+    #[serde(default)]
+    pub entity: String,
+    /// Indicates whether card payments are enabled.
+    #[serde(default)]
+    pub card: bool,
+    /// Indicates whether debit card is enabled.
+    #[serde(default)]
+    pub debit_card: Option<bool>,
+    /// Indicates whether credit card is enabled.
+    #[serde(default)]
+    pub credit_card: Option<bool>,
+    /// Indicates whether cardless EMI is enabled.
+    #[serde(default)]
+    pub cardless_emi: Option<bool>,
+    /// Supported netbanking banks (map of bank code to display name or enabled boolean).
+    #[serde(default)]
+    pub netbanking: Option<HashMap<String, serde_json::Value>>,
+    /// Supported wallets (map of wallet code to display name or enabled boolean).
+    #[serde(default)]
+    pub wallet: Option<HashMap<String, serde_json::Value>>,
+    /// Supported UPI apps / handles.
+    #[serde(default)]
+    pub upi: Option<serde_json::Value>,
+    /// Supported paylater providers.
+    #[serde(default)]
+    pub paylater: Option<HashMap<String, serde_json::Value>>,
+    /// Supported card networks (e.g. Visa, MasterCard, RuPay).
+    #[serde(default)]
+    pub card_networks: Option<HashMap<String, serde_json::Value>>,
+    /// Supported debit card EMI banks.
+    #[serde(default)]
+    pub emi: Option<serde_json::Value>,
+}
+
+// Fund Account Validations (https://razorpay.com/docs/api/razorpayx/account-validation/)
+
+/// Fund Account Validation Type.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ValidationType {
+    /// Penny drop validation to verify bank account ownership.
+    #[default]
+    Pennydrop,
+    /// UPI intent validation.
+    UpiIntent,
+    /// Optimized penny drop validation.
+    Optimized,
+}
+
+/// Request parameters to initiate a Fund Account Validation (`POST /v1/fund_accounts/validations`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CreateFundAccountValidationRequest {
+    /// Target fund account payload to validate.
+    pub fund_account: FundAccountValidationTarget,
+    /// Validation amount in smallest currency subunit (e.g. 100 for 1.00 INR).
+    pub amount: u64,
+    /// Currency code (e.g. `"INR"`).
+    pub currency: String,
+    /// Key-value metadata notes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Notes>,
+}
+
+/// Target fund account payload for validation.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct FundAccountValidationTarget {
+    /// Unique fund account ID if validating an existing registered fund account.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+}
+
+/// Details of a Fund Account Validation record.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct FundAccountValidation {
+    /// Unique validation ID (e.g. `"fav_00000000000001"`).
+    pub id: String,
+    /// Entity name, always `"fund_account.validation"`.
+    pub entity: String,
+    /// Fund account ID being validated.
+    pub fund_account_id: Option<String>,
+    /// Lifecycle status of validation (e.g. `"created"`, `"completed"`, `"failed"`).
+    pub status: String,
+    /// Validation amount in paise.
+    pub amount: u64,
+    /// Currency code.
+    pub currency: String,
+    /// Verification results from banking partner.
+    pub results: Option<FundAccountValidationResults>,
+    /// Key-value metadata notes.
+    pub notes: Option<Notes>,
+    /// UNIX timestamp when created.
+    pub created_at: u64,
+}
+
+/// Verification results attached to a fund account validation.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct FundAccountValidationResults {
+    /// Registered account holder name returned by the bank.
+    pub registered_name: Option<String>,
+    /// Status of account validation.
+    pub account_status: Option<String>,
+    /// Name matching score or status.
+    pub name_match_score: Option<f64>,
+}
+
+// Payment S2S / Recurring Creation & Transfers
+
+/// Request payload to initiate a payment via `POST /v1/payments/create/json` or recurring charge.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CreatePaymentJsonRequest {
+    /// Amount to charge in smallest currency sub-units (e.g. 10000 for 100.00 INR).
+    pub amount: u64,
+    /// Currency code (e.g. `"INR"`).
+    pub currency: String,
+    /// Customer email address.
+    pub email: String,
+    /// Customer contact number.
+    pub contact: String,
+    /// Customer ID when charging saved token.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer_id: Option<String>,
+    /// Token ID if recurring / saved card payment.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token: Option<String>,
+    /// Associated Order ID if creating payment against an order.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order_id: Option<String>,
+    /// Payment method string (e.g. `"card"`, `"upi"`, `"netbanking"`, `"wallet"`).
+    pub method: String,
+    /// Card details if paying directly via card.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub card: Option<CardPaymentInput>,
+    /// Netbanking bank code (e.g. `"HDFC"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bank: Option<String>,
+    /// Wallet code (e.g. `"payzapp"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wallet: Option<String>,
+    /// VPA address if UPI payment.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vpa: Option<String>,
+    /// Whether recurring payment is authorized without customer intervention.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recurring: Option<String>,
+    /// Key-value metadata notes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Notes>,
+}
+
+/// Raw card input parameters when initiating a card payment.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CardPaymentInput {
+    /// Primary 16-digit card number.
+    pub number: String,
+    /// Expiry month (1-12).
+    pub expiry_month: String,
+    /// Expiry year (YY or YYYY).
+    pub expiry_year: String,
+    /// Card CVV security code.
+    pub cvv: String,
+    /// Cardholder display name.
+    pub name: String,
+}
+
+/// Split transfer request parameters when transferring from a payment.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TransferPaymentRequest {
+    /// List of split transfers to linked accounts.
+    pub transfers: Vec<TransferRequest>,
+}
+
+/// Request parameters for submitting payment action (`POST /v1/payments/{id}/action`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PaymentActionRequest {
+    /// Action payload details or OTP/PIN.
+    #[serde(flatten)]
+    pub action: HashMap<String, serde_json::Value>,
+}
+
+// Token Creation & Network Tokenization
+
+/// Request payload to create a token (`POST /v1/tokens`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CreateTokenRequest {
+    /// Customer ID to associate token with.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer_id: Option<String>,
+    /// Method type, typically `"card"`.
+    pub method: String,
+    /// Card parameters for tokenization.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub card: Option<CardPaymentInput>,
+    /// Authentication details or consent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auth_type: Option<String>,
+    /// Key-value metadata notes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Notes>,
+}
+
+/// Request parameters for creating service provider / network token (`POST /v1/tokens/service_provider_tokens`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ServiceProviderTokenRequest {
+    /// Card details or token reference.
+    #[serde(flatten)]
+    pub params: HashMap<String, serde_json::Value>,
 }

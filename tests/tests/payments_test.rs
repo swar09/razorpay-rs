@@ -244,8 +244,8 @@ async fn test_payments_refund_endpoint() {
         created_at: 1600000000,
         batch_id: None,
         status: razorpay::models::RefundStatus::Processed,
-        speed_processed: RefundSpeed::Normal,
-        speed_requested: RefundSpeed::Normal,
+        speed_processed: Some(RefundSpeed::Normal),
+        speed_requested: Some(RefundSpeed::Normal),
     };
 
     Mock::given(method("POST"))
@@ -383,4 +383,159 @@ async fn test_payments_otp_and_transfers() {
         .await
         .expect("OTP submit should succeed");
     assert_eq!(sub_res["status"], "authenticated");
+}
+
+#[tokio::test]
+async fn test_payments_create_json_and_additional_methods() {
+    let mock_server = MockServer::start().await;
+    let client = create_test_client(&mock_server.uri()).await;
+
+    // 1. Create Payment JSON (S2S / Recurring)
+    let create_json_payload = razorpay::models::CreatePaymentJsonRequest {
+        amount: 25000,
+        currency: "INR".to_string(),
+        email: "customer@example.com".to_string(),
+        contact: "+919876543210".to_string(),
+        customer_id: Some("cust_123".to_string()),
+        token: Some("token_123".to_string()),
+        order_id: None,
+        method: "card".to_string(),
+        card: None,
+        bank: None,
+        wallet: None,
+        vpa: None,
+        recurring: Some("1".to_string()),
+        notes: None,
+    };
+
+    let expected_payment = serde_json::json!({
+        "id": "pay_s2s_123",
+        "entity": "payment",
+        "amount": 25000,
+        "currency": "INR",
+        "status": "captured",
+        "method": "card",
+        "international": false,
+        "captured": true,
+        "amount_refunded": 0,
+        "email": "customer@example.com",
+        "contact": "+919876543210",
+        "customer_id": "cust_123",
+        "token_id": "token_123",
+        "created_at": 1600000000
+    });
+
+    Mock::given(method("POST"))
+        .and(path("/payments/create/json"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&expected_payment))
+        .mount(&mock_server)
+        .await;
+
+    let created_payment = client
+        .payments()
+        .create_json(create_json_payload, None)
+        .await
+        .expect("Create payment JSON should succeed");
+
+    assert_eq!(created_payment.id, "pay_s2s_123");
+    assert_eq!(created_payment.amount, 25000);
+
+    // 2. Fetch specific refund for payment
+    let expected_refund = serde_json::json!({
+        "id": "rfnd_specific_123",
+        "entity": "refund",
+        "amount": 5000,
+        "currency": "INR",
+        "payment_id": "pay_s2s_123",
+        "status": "processed",
+        "speed": "normal",
+        "created_at": 1600000000
+    });
+
+    Mock::given(method("GET"))
+        .and(path("/payments/pay_s2s_123/refunds/rfnd_specific_123"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&expected_refund))
+        .mount(&mock_server)
+        .await;
+
+    let refund = client
+        .payments()
+        .fetch_refund("pay_s2s_123", "rfnd_specific_123", None)
+        .await
+        .expect("Fetch refund for payment should succeed");
+
+    assert_eq!(refund.id, "rfnd_specific_123");
+    assert_eq!(refund.amount, 5000);
+
+    // 3. Split transfer on payment
+    let transfer_payload = razorpay::models::TransferPaymentRequest {
+        transfers: vec![razorpay::models::TransferRequest {
+            account: "acc_sub_1".to_string(),
+            amount: 10000,
+            currency: "INR".to_string(),
+            notes: None,
+            linked_account_notes: None,
+            on_hold: None,
+            on_hold_until: None,
+        }],
+    };
+
+    let expected_transfers = serde_json::json!({
+        "entity": "collection",
+        "count": 1,
+        "items": [{
+            "id": "trf_pay_1",
+            "entity": "transfer",
+            "source": "pay_s2s_123",
+            "recipient": "acc_sub_1",
+            "amount": 10000,
+            "currency": "INR",
+            "amount_reversed": 0,
+            "on_hold": false,
+            "created_at": 1600000000
+        }]
+    });
+
+    Mock::given(method("POST"))
+        .and(path("/payments/pay_s2s_123/transfers"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&expected_transfers))
+        .mount(&mock_server)
+        .await;
+
+    let transfers = client
+        .payments()
+        .transfer("pay_s2s_123", transfer_payload, None)
+        .await
+        .expect("Transfer payment should succeed");
+
+    assert_eq!(transfers.count, 1);
+    assert_eq!(transfers.items[0].id, "trf_pay_1");
+
+    // 4. Payment Action (Challenge / OTP / 3DS)
+    Mock::given(method("POST"))
+        .and(path("/payments/pay_s2s_123/action"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "action": "redirect",
+            "url": "https://bank.com/challenge"
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let action_res = client
+        .payments()
+        .action(
+            "pay_s2s_123",
+            razorpay::models::PaymentActionRequest {
+                action: HashMap::from([("otp".to_string(), serde_json::json!("654321"))]),
+            },
+            None,
+        )
+        .await
+        .expect("Payment action should succeed");
+
+    assert_eq!(action_res["action"], "redirect");
 }

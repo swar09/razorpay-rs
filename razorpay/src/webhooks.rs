@@ -133,3 +133,55 @@ impl<'a> SubscriptionPaymentSignatureVerification<'a> {
         )
     }
 }
+
+/// Verify Razorpay Payment Link payment signature.
+///
+/// Computes HMAC-SHA256 of `payment_link_id|payment_link_reference_id|payment_link_status|payment_id`
+/// using your API Key Secret.
+pub fn verify_payment_link_signature(
+    payment_link_id: &str,
+    payment_link_reference_id: &str,
+    payment_link_status: &str,
+    payment_id: &str,
+    signature: &str,
+    secret: &str,
+) -> RazorpayResult<()> {
+    let payload = format!(
+        "{}|{}|{}|{}",
+        payment_link_id, payment_link_reference_id, payment_link_status, payment_id
+    );
+    let mut mac = HmacSha256::new_from_slice(secret.as_bytes())
+        .map_err(|_| RazorpayError::InvalidInput("invalid key secret".into()))?;
+    mac.update(payload.as_bytes());
+    let expected = hex::encode(mac.finalize().into_bytes());
+
+    if constant_time_eq(expected.as_bytes(), signature.as_bytes()) {
+        Ok(())
+    } else {
+        Err(RazorpayError::SignatureMismatch)
+    }
+}
+
+/// Helper struct for type-safe Payment Link signature verification.
+#[derive(Debug, Clone)]
+pub struct PaymentLinkSignatureVerification<'a> {
+    pub payment_link_id: &'a str,
+    pub payment_link_reference_id: &'a str,
+    pub payment_link_status: &'a str,
+    pub payment_id: &'a str,
+    pub signature: &'a str,
+    pub secret: &'a str,
+}
+
+impl<'a> PaymentLinkSignatureVerification<'a> {
+    pub fn verify(&self) -> RazorpayResult<()> {
+        verify_payment_link_signature(
+            self.payment_link_id,
+            self.payment_link_reference_id,
+            self.payment_link_status,
+            self.payment_id,
+            self.signature,
+            self.secret,
+        )
+    }
+}

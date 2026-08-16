@@ -78,6 +78,17 @@ impl VirtualAccounts {
         let path = format!("virtual_accounts/{}/allowed_payers/{}", va_id, payer_id);
         self.http.delete(&path, extra_headers).await
     }
+
+    /// Delete/close a receiver on a virtual account (`DELETE /v1/virtual_accounts/{va_id}/receivers/{receiver_id}`).
+    pub async fn delete_receiver(
+        &self,
+        va_id: &str,
+        receiver_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<crate::models::DeleteResponse> {
+        let path = format!("virtual_accounts/{}/receivers/{}", va_id, receiver_id);
+        self.http.delete(&path, extra_headers).await
+    }
 }
 
 #[async_trait]

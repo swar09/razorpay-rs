@@ -200,6 +200,33 @@ impl RazorpayClient {
     pub fn webhooks(&self) -> crate::resources::webhooks::Webhooks {
         crate::resources::webhooks::Webhooks::new(Arc::clone(&self.http))
     }
+
+    /// Access Payment Methods API operations (`/v1/methods`).
+    pub fn methods(&self) -> crate::resources::methods::Methods {
+        crate::resources::methods::Methods::new(Arc::clone(&self.http))
+    }
+
+    /// Create a clone of this client configured to make API calls on behalf of a
+    /// linked sub-merchant account via the `X-Razorpay-Account` header.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use razorpay::RazorpayClient;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = RazorpayClient::new("rzp_test_key", "test_secret")?;
+    /// let sub_client = client.with_account("acc_1234567890ABCD")?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn with_account(&self, account_id: impl AsRef<str>) -> RazorpayResult<Self> {
+        let http = self.http.with_account_id(account_id.as_ref())?;
+        Ok(Self {
+            http: Arc::new(http),
+        })
+    }
 }
 
 /// Builder for configuring and creating a [`RazorpayClient`].
