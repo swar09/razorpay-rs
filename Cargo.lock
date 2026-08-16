@@ -863,7 +863,7 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "razorpay-examples"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "dotenvy",
  "razorpay-rs",
@@ -872,7 +872,7 @@ dependencies = [
 
 [[package]]
 name = "razorpay-rs"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "async-trait",
  "hex",
@@ -889,7 +889,7 @@ dependencies = [
 
 [[package]]
 name = "razorpay-tests"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "dotenvy",
  "hex",

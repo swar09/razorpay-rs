@@ -14,14 +14,14 @@ Add `razorpay-rs` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-razorpay = { package = "razorpay-rs", version = "0.1.0" }
+razorpay = { package = "razorpay-rs", version = "0.1.0-alpha.1" }
 tokio = { version = "1", features = ["full"] }
 ```
 
 Or using `cargo add`:
 
 ```bash
-cargo add razorpay-rs
+cargo add razorpay-rs@0.1.0-alpha.1
 ```
 
 ---
