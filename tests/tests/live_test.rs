@@ -178,7 +178,10 @@ async fn test_live_payment_links_flow() {
         .await
         .expect("Live payment link cancellation should succeed");
 
-    assert_eq!(cancelled.status, razorpay::models::PaymentLinkStatus::Cancelled);
+    assert_eq!(
+        cancelled.status,
+        razorpay::models::PaymentLinkStatus::Cancelled
+    );
 }
 
 #[tokio::test]

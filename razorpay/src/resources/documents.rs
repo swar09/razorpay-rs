@@ -44,8 +44,7 @@ impl Documents {
         purpose: &str,
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<Document> {
-        let part = reqwest::multipart::Part::bytes(file_bytes)
-            .file_name(filename.to_string());
+        let part = reqwest::multipart::Part::bytes(file_bytes).file_name(filename.to_string());
 
         let form = reqwest::multipart::Form::new()
             .text("purpose", purpose.to_string())

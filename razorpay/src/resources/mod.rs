@@ -23,6 +23,7 @@ pub mod subscriptions;
 pub mod tokens;
 pub mod transfers;
 pub mod virtual_accounts;
+pub mod webhooks;
 
 pub use accounts::Accounts;
 pub use addons::Addons;
@@ -49,3 +50,4 @@ pub use subscriptions::Subscriptions;
 pub use tokens::Tokens;
 pub use transfers::Transfers;
 pub use virtual_accounts::VirtualAccounts;
+pub use webhooks::Webhooks;

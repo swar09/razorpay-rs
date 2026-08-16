@@ -36,7 +36,11 @@ impl Http {
         Self { client, config }
     }
 
-    pub(crate) fn build_versioned_url(&self, version: ApiVersion, path: &str) -> RazorpayResult<Url> {
+    pub(crate) fn build_versioned_url(
+        &self,
+        version: ApiVersion,
+        path: &str,
+    ) -> RazorpayResult<Url> {
         let clean_path = path.trim_start_matches('/');
         let ver = match version {
             ApiVersion::V1 => "v1",
@@ -58,7 +62,10 @@ impl Http {
     }
 
     fn build_url(&self, path: &str) -> RazorpayResult<Url> {
-        if let Some(rest) = path.strip_prefix("../v2/").or_else(|| path.strip_prefix("v2/")) {
+        if let Some(rest) = path
+            .strip_prefix("../v2/")
+            .or_else(|| path.strip_prefix("v2/"))
+        {
             return self.build_versioned_url(ApiVersion::V2, rest);
         }
         let clean_path = path.trim_start_matches('/');

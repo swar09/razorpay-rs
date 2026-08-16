@@ -195,6 +195,11 @@ impl RazorpayClient {
     pub fn bills(&self) -> crate::resources::bills::Bills {
         crate::resources::bills::Bills::new(Arc::clone(&self.http))
     }
+
+    /// Access Webhooks management resource operations (`/v1/webhooks` and `/v2/accounts/{account_id}/webhooks`).
+    pub fn webhooks(&self) -> crate::resources::webhooks::Webhooks {
+        crate::resources::webhooks::Webhooks::new(Arc::clone(&self.http))
+    }
 }
 
 /// Builder for configuring and creating a [`RazorpayClient`].

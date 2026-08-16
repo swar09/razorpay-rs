@@ -1,7 +1,10 @@
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 
-use crate::error::{RazorpayError, RazorpayResult};
+use crate::{
+    error::{RazorpayError, RazorpayResult},
+    models::WebhookPayload,
+};
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -34,6 +37,23 @@ pub fn verify_webhook_signature(body: &str, signature: &str, secret: &str) -> Ra
     }
 }
 
+/// Parse and deserialize a raw incoming Razorpay Webhook payload.
+///
+/// Ensures valid JSON structure and converts to strongly-typed [`WebhookPayload`].
+pub fn parse_webhook_event(raw_body: &str) -> RazorpayResult<WebhookPayload> {
+    serde_json::from_str::<WebhookPayload>(raw_body).map_err(RazorpayError::Serde)
+}
+
+/// Verify signature and parse an incoming webhook payload in a single step.
+pub fn verify_and_parse_webhook(
+    body: &str,
+    signature: &str,
+    secret: &str,
+) -> RazorpayResult<WebhookPayload> {
+    verify_webhook_signature(body, signature, secret)?;
+    parse_webhook_event(body)
+}
+
 /// Verify Razorpay standard Checkout payment signature (`razorpay_signature`).
 ///
 /// Computes HMAC-SHA256 of `order_id|payment_id` using your API Key Secret.
@@ -59,9 +79,10 @@ pub fn verify_payment_signature(
 /// Verify Razorpay Subscription payment signature.
 ///
 /// Computes HMAC-SHA256 of `payment_id|subscription_id` using your API Key Secret.
+/// Parameters are specified in payload order (`payment_id`, then `subscription_id`).
 pub fn verify_subscription_payment_signature(
-    subscription_id: &str,
     payment_id: &str,
+    subscription_id: &str,
     signature: &str,
     secret: &str,
 ) -> RazorpayResult<()> {
@@ -78,5 +99,37 @@ pub fn verify_subscription_payment_signature(
     }
 }
 
-// TODO("Add strongly-typed WebhookEvent enum matching event types like payment.captured, order.paid, subscription.charged, etc.")
-// TODO("Add programmatic Webhook management resource (client.webhooks() CRUD endpoints hitting /v1/webhooks and /v2/accounts/{account_id}/webhooks)")
+/// Helper struct for type-safe Checkout payment signature verification.
+#[derive(Debug, Clone)]
+pub struct PaymentSignatureVerification<'a> {
+    pub order_id: &'a str,
+    pub payment_id: &'a str,
+    pub signature: &'a str,
+    pub secret: &'a str,
+}
+
+impl<'a> PaymentSignatureVerification<'a> {
+    pub fn verify(&self) -> RazorpayResult<()> {
+        verify_payment_signature(self.order_id, self.payment_id, self.signature, self.secret)
+    }
+}
+
+/// Helper struct for type-safe Subscription payment signature verification.
+#[derive(Debug, Clone)]
+pub struct SubscriptionPaymentSignatureVerification<'a> {
+    pub payment_id: &'a str,
+    pub subscription_id: &'a str,
+    pub signature: &'a str,
+    pub secret: &'a str,
+}
+
+impl<'a> SubscriptionPaymentSignatureVerification<'a> {
+    pub fn verify(&self) -> RazorpayResult<()> {
+        verify_subscription_payment_signature(
+            self.payment_id,
+            self.subscription_id,
+            self.signature,
+            self.secret,
+        )
+    }
+}

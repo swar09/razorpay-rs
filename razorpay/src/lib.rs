@@ -152,5 +152,6 @@ pub use resources::{
     Accounts, Addons, Bills, Cards, CustomerTokens, Customers, Disputes, Documents, FundAccounts,
     Iins, Invoices, Items, Orders, PaymentLinks, Payments, Payouts, Plans, Products, QrCodes,
     Refunds, Settlements, Stakeholders, Subscriptions, Tokens, Transfers, VirtualAccounts,
+    Webhooks,
 };
 pub use traits::{Creatable, Deletable, Fetchable, Listable, Updatable};
