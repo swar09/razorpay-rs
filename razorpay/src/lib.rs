@@ -158,6 +158,6 @@ pub use traits::{Creatable, Deletable, Fetchable, Listable, Updatable};
 pub use webhooks::{
     PaymentLinkSignatureVerification, PaymentSignatureVerification,
     SubscriptionPaymentSignatureVerification, parse_webhook_event, verify_and_parse_webhook,
-    verify_payment_link_signature, verify_payment_signature,
-    verify_subscription_payment_signature, verify_webhook_signature,
+    verify_payment_link_signature, verify_payment_signature, verify_subscription_payment_signature,
+    verify_webhook_signature,
 };

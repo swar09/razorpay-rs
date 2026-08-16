@@ -6,8 +6,8 @@ use crate::{
     error::RazorpayResult,
     http::Http,
     models::{
-        CreateTokenRequest, DeleteResponse, ListOptions, RazorpayList,
-        ServiceProviderTokenRequest, Token,
+        CreateTokenRequest, DeleteResponse, ListOptions, RazorpayList, ServiceProviderTokenRequest,
+        Token,
     },
     traits::{Creatable, Deletable, Fetchable, Listable},
 };
