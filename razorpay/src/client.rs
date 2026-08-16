@@ -11,6 +11,18 @@ use crate::{
 ///
 /// Holds an internal `Arc<Http>` reference, making it cheap to clone across threads
 /// and pass into async tasks or application state.
+///
+/// # Example
+///
+/// ```no_run
+/// use razorpay::RazorpayClient;
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let client = RazorpayClient::new("rzp_test_key", "test_secret")?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Clone)]
 pub struct RazorpayClient {
     pub(crate) http: Arc<Http>,
@@ -18,6 +30,18 @@ pub struct RazorpayClient {
 
 impl RazorpayClient {
     /// Create a new `RazorpayClient` with API credentials and default settings.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use razorpay::RazorpayClient;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = RazorpayClient::new("rzp_test_key", "test_secret")?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn new(key_id: impl Into<String>, key_secret: impl Into<String>) -> RazorpayResult<Self> {
         RazorpayClientBuilder::new()
             .key_id(key_id)
@@ -26,6 +50,23 @@ impl RazorpayClient {
     }
 
     /// Obtain a new builder instance to configure client options.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use razorpay::RazorpayClient;
+    /// use std::time::Duration;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = RazorpayClient::builder()
+    ///     .key_id("rzp_test_key")
+    ///     .key_secret("test_secret")
+    ///     .timeout(Duration::from_secs(45))
+    ///     .build()?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn builder() -> RazorpayClientBuilder {
         RazorpayClientBuilder::new()
     }
@@ -100,9 +141,9 @@ impl RazorpayClient {
         crate::resources::accounts::Accounts::new(Arc::clone(&self.http))
     }
 
-    /// Access Items resource operations (`/v1/items`).
-    pub fn items(&self) -> crate::resources::items::Items {
-        crate::resources::items::Items::new(Arc::clone(&self.http))
+    /// Access Virtual Accounts / Smart Collect operations (`/v1/virtual_accounts`).
+    pub fn virtual_accounts(&self) -> crate::resources::virtual_accounts::VirtualAccounts {
+        crate::resources::virtual_accounts::VirtualAccounts::new(Arc::clone(&self.http))
     }
 
     /// Access QR Codes resource operations (`/v1/payments/qr_codes`).
@@ -110,9 +151,9 @@ impl RazorpayClient {
         crate::resources::qr_codes::QrCodes::new(Arc::clone(&self.http))
     }
 
-    /// Access Virtual Accounts (Smart Collect) resource operations (`/v1/virtual_accounts`).
-    pub fn virtual_accounts(&self) -> crate::resources::virtual_accounts::VirtualAccounts {
-        crate::resources::virtual_accounts::VirtualAccounts::new(Arc::clone(&self.http))
+    /// Access Items catalog resource operations (`/v1/items`).
+    pub fn items(&self) -> crate::resources::items::Items {
+        crate::resources::items::Items::new(Arc::clone(&self.http))
     }
 
     /// Access Disputes resource operations (`/v1/disputes`).
@@ -120,19 +161,19 @@ impl RazorpayClient {
         crate::resources::disputes::Disputes::new(Arc::clone(&self.http))
     }
 
-    /// Access RazorpayX Fund Accounts resource operations (`/v1/fund_accounts`).
+    /// Access Documents resource operations (`/v1/documents`).
+    pub fn documents(&self) -> crate::resources::documents::Documents {
+        crate::resources::documents::Documents::new(Arc::clone(&self.http))
+    }
+
+    /// Access Fund Accounts resource operations (`/v1/fund_accounts`).
     pub fn fund_accounts(&self) -> crate::resources::fund_accounts::FundAccounts {
         crate::resources::fund_accounts::FundAccounts::new(Arc::clone(&self.http))
     }
 
-    /// Access RazorpayX Payouts resource operations (`/v1/payouts`).
+    /// Access Payouts resource operations (`/v1/payouts`).
     pub fn payouts(&self) -> crate::resources::payouts::Payouts {
         crate::resources::payouts::Payouts::new(Arc::clone(&self.http))
-    }
-
-    /// Access Documents resource operations (`/v1/documents`).
-    pub fn documents(&self) -> crate::resources::documents::Documents {
-        crate::resources::documents::Documents::new(Arc::clone(&self.http))
     }
 
     /// Access Cards resource operations (`/v1/cards`).
@@ -140,12 +181,12 @@ impl RazorpayClient {
         crate::resources::cards::Cards::new(Arc::clone(&self.http))
     }
 
-    /// Access Issuer Identification Numbers (IINs) operations (`/v1/iins`).
+    /// Access IINs (Issuer Identification Numbers) resource operations (`/v1/iins`).
     pub fn iins(&self) -> crate::resources::iins::Iins {
         crate::resources::iins::Iins::new(Arc::clone(&self.http))
     }
 
-    /// Access Linked Account Products operations (`/v2/accounts/{id}/products`).
+    /// Access Products configuration resource operations (`/v2/products`).
     pub fn products(&self) -> crate::resources::products::Products {
         crate::resources::products::Products::new(Arc::clone(&self.http))
     }
@@ -156,7 +197,26 @@ impl RazorpayClient {
     }
 }
 
-/// Builder for constructing a configured [`RazorpayClient`].
+/// Builder for configuring and creating a [`RazorpayClient`].
+///
+/// # Example
+///
+/// ```no_run
+/// use razorpay::RazorpayClientBuilder;
+/// use std::time::Duration;
+/// use url::Url;
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let client = RazorpayClientBuilder::new()
+///     .key_id("rzp_test_key")
+///     .key_secret("test_secret")
+///     .base_url(Url::parse("https://api.razorpay.com/v1/")?)
+///     .timeout(Duration::from_secs(30))
+///     .build()?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Default, Clone)]
 pub struct RazorpayClientBuilder {
     key_id: Option<String>,
