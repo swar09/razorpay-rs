@@ -1,6 +1,6 @@
 # razorpay-rs
 
-An async, type-safe, idiomatic Rust SDK for the [Razorpay API](https://razorpay.com/docs/api/).
+An async, type-safe, idiomatic Rust client for the [Razorpay API](https://razorpay.com/docs/api/).
 
 [![CI](https://github.com/swar09/razorpay-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/swar09/razorpay-rs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
