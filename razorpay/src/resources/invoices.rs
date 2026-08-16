@@ -49,6 +49,15 @@ impl Invoices {
         let path = format!("invoices/{}/notify_by/{}", invoice_id, medium_str);
         self.http.post(&path, &serde_json::json!({}), extra_headers).await
     }
+
+    /// Create subscription registration link (`POST /v1/subscription_registration/auth_links`).
+    pub async fn create_registration_link<T: serde::Serialize + Sync>(
+        &self,
+        data: &T,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        self.http.post("subscription_registration/auth_links", data, extra_headers).await
+    }
 }
 
 #[async_trait]

@@ -56,6 +56,28 @@ impl VirtualAccounts {
         let path = format!("virtual_accounts/{}/receivers", va_id);
         self.http.post(&path, &data, extra_headers).await
     }
+
+    /// Add allowed payers account details (`POST /v1/virtual_accounts/{va_id}/allowed_payers`).
+    pub async fn add_allowed_payer<T: serde::Serialize + Sync>(
+        &self,
+        va_id: &str,
+        data: &T,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("virtual_accounts/{}/allowed_payers", va_id);
+        self.http.post(&path, data, extra_headers).await
+    }
+
+    /// Delete allowed payer (`DELETE /v1/virtual_accounts/{va_id}/allowed_payers/{payer_id}`).
+    pub async fn delete_allowed_payer(
+        &self,
+        va_id: &str,
+        payer_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<crate::models::DeleteResponse> {
+        let path = format!("virtual_accounts/{}/allowed_payers/{}", va_id, payer_id);
+        self.http.delete(&path, extra_headers).await
+    }
 }
 
 #[async_trait]

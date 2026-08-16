@@ -30,6 +30,47 @@ impl Customers {
             customer_id: customer_id.into(),
         }
     }
+
+    /// Add a bank account for a customer (`POST /v1/customers/{customer_id}/bank_account`).
+    pub async fn add_bank_account<T: serde::Serialize + Sync>(
+        &self,
+        customer_id: &str,
+        data: &T,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("customers/{}/bank_account", customer_id);
+        self.http.post(&path, data, extra_headers).await
+    }
+
+    /// Delete a customer bank account (`DELETE /v1/customers/{customer_id}/bank_account/{bank_account_id}`).
+    pub async fn delete_bank_account(
+        &self,
+        customer_id: &str,
+        bank_account_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<DeleteResponse> {
+        let path = format!("customers/{}/bank_account/{}", customer_id, bank_account_id);
+        self.http.delete(&path, extra_headers).await
+    }
+
+    /// Request eligibility check for customer (`POST /v1/customers/eligibility`).
+    pub async fn request_eligibility_check<T: serde::Serialize + Sync>(
+        &self,
+        data: &T,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        self.http.post("customers/eligibility", data, extra_headers).await
+    }
+
+    /// Fetch customer eligibility check result (`GET /v1/customers/eligibility/{eligibility_id}`).
+    pub async fn fetch_eligibility(
+        &self,
+        eligibility_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("customers/eligibility/{}", eligibility_id);
+        self.http.get::<serde_json::Value, ()>(&path, None, extra_headers).await
+    }
 }
 
 #[async_trait]

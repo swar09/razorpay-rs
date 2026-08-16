@@ -6,7 +6,7 @@ use crate::{
     error::RazorpayResult,
     http::Http,
     models::{CreateOrderRequest, ListOptions, Order, Payment, RazorpayList},
-    traits::{Creatable, Fetchable, Listable},
+    traits::{Creatable, Fetchable, Listable, Updatable},
 };
 
 /// Resource handle for Razorpay Orders API endpoints (`/v1/orders`).
@@ -29,6 +29,28 @@ impl Orders {
     ) -> RazorpayResult<RazorpayList<Payment>> {
         let path = format!("orders/{}/payments", order_id);
         self.http.get(&path, query.as_ref(), extra_headers).await
+    }
+
+    /// View RTO review details for an order (`POST /v1/orders/{order_id}/rto_review`).
+    pub async fn view_rto_review<T: serde::Serialize + Sync>(
+        &self,
+        order_id: &str,
+        data: &T,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("orders/{}/rto_review", order_id);
+        self.http.post(&path, data, extra_headers).await
+    }
+
+    /// Edit fulfillment details for an order (`POST /v1/orders/{order_id}/fulfillment`).
+    pub async fn edit_fulfillment<T: serde::Serialize + Sync>(
+        &self,
+        order_id: &str,
+        data: &T,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("orders/{}/fulfillment", order_id);
+        self.http.post(&path, data, extra_headers).await
     }
 }
 
@@ -65,5 +87,22 @@ impl Listable for Orders {
         extra_headers: Option<HeaderMap>,
     ) -> RazorpayResult<RazorpayList<Self::Item>> {
         self.http.get("orders", query.as_ref(), extra_headers).await
+    }
+}
+
+#[async_trait]
+impl Updatable for Orders {
+    type Request = serde_json::Value;
+    type Response = Order;
+
+    /// Update order details (e.g. notes) (`PATCH /v1/orders/{order_id}`).
+    async fn update(
+        &self,
+        order_id: &str,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
+        let path = format!("orders/{}", order_id);
+        self.http.patch(&path, &data, extra_headers).await
     }
 }
