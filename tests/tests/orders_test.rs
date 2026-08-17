@@ -197,3 +197,27 @@ async fn test_orders_update_success() {
 
     assert_eq!(order.id, "order_Hk1234567890");
 }
+
+#[tokio::test]
+async fn test_orders_view_rzp_and_extras() {
+    let mock_server = MockServer::start().await;
+    let client = create_test_client(&mock_server.uri()).await;
+
+    Mock::given(method("GET"))
+        .and(path("/orders/order_123/view_rzp"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "order_id": "order_123",
+            "view_status": "viewed"
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let res = client
+        .orders()
+        .view_rzp("order_123", None)
+        .await
+        .expect("view_rzp should succeed");
+
+    assert_eq!(res["order_id"], "order_123");
+}

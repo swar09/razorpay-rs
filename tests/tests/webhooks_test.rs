@@ -172,3 +172,86 @@ fn test_verify_and_parse_webhook_combined() {
         serde_json::from_str(&format!("\"{}\"", parsed.event)).unwrap();
     assert_eq!(event_type, WebhookEventType::PaymentCaptured);
 }
+
+#[test]
+fn test_verify_payment_link_signature_valid() {
+    use hmac::{Hmac, Mac};
+    use sha2::Sha256;
+    type HmacSha256 = Hmac<Sha256>;
+
+    let payment_link_id = "plink_123456";
+    let payment_link_reference_id = "ref_999";
+    let payment_link_status = "paid";
+    let payment_id = "pay_987654";
+    let secret = "secret_xyz";
+
+    let payload = format!(
+        "{}|{}|{}|{}",
+        payment_link_id, payment_link_reference_id, payment_link_status, payment_id
+    );
+
+    let mut mac = HmacSha256::new_from_slice(secret.as_bytes()).unwrap();
+    mac.update(payload.as_bytes());
+    let sig = hex::encode(mac.finalize().into_bytes());
+
+    // 1. Function test
+    razorpay::webhooks::verify_payment_link_signature(
+        payment_link_id,
+        payment_link_reference_id,
+        payment_link_status,
+        payment_id,
+        &sig,
+        secret,
+    )
+    .expect("Payment link signature should verify");
+
+    // 2. Helper struct test
+    let verifier = razorpay::webhooks::PaymentLinkSignatureVerification {
+        payment_link_id,
+        payment_link_reference_id,
+        payment_link_status,
+        payment_id,
+        signature: &sig,
+        secret,
+    };
+    verifier
+        .verify()
+        .expect("Verifier helper struct should succeed");
+}
+
+#[test]
+fn test_signature_verifier_debug_redaction() {
+    let secret = "very_confidential_webhook_or_api_secret_123";
+
+    let p_verifier = razorpay::webhooks::PaymentSignatureVerification {
+        order_id: "order_123",
+        payment_id: "pay_123",
+        signature: "sig_123",
+        secret,
+    };
+    let debug_str = format!("{:?}", p_verifier);
+    assert!(!debug_str.contains(secret));
+    assert!(debug_str.contains("[REDACTED]"));
+
+    let s_verifier = razorpay::webhooks::SubscriptionPaymentSignatureVerification {
+        payment_id: "pay_123",
+        subscription_id: "sub_123",
+        signature: "sig_123",
+        secret,
+    };
+    let debug_str = format!("{:?}", s_verifier);
+    assert!(!debug_str.contains(secret));
+    assert!(debug_str.contains("[REDACTED]"));
+
+    let pl_verifier = razorpay::webhooks::PaymentLinkSignatureVerification {
+        payment_link_id: "plink_123",
+        payment_link_reference_id: "ref_123",
+        payment_link_status: "paid",
+        payment_id: "pay_123",
+        signature: "sig_123",
+        secret,
+    };
+    let debug_str = format!("{:?}", pl_verifier);
+    assert!(!debug_str.contains(secret));
+    assert!(debug_str.contains("[REDACTED]"));
+}

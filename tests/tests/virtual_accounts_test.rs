@@ -126,4 +126,21 @@ async fn test_virtual_accounts_operations() {
         .await
         .expect("Close virtual account should succeed");
     assert_eq!(closed.status, VirtualAccountStatus::Closed);
+
+    // 5. Delete Receiver
+    Mock::given(method("DELETE"))
+        .and(path("/virtual_accounts/va_123/receivers/recv_456"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(serde_json::json!({"deleted": true})),
+        )
+        .mount(&mock_server)
+        .await;
+
+    let del_resp = client
+        .virtual_accounts()
+        .delete_receiver("va_123", "recv_456", None)
+        .await
+        .expect("Delete receiver should succeed");
+    assert!(del_resp.deleted);
 }

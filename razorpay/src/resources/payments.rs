@@ -23,6 +23,27 @@ impl Payments {
         Self { http }
     }
 
+    /// Create a payment directly (S2S / recurring charge on token) (`POST /v1/payments/create/json`).
+    pub async fn create_json(
+        &self,
+        data: crate::models::CreatePaymentJsonRequest,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Payment> {
+        self.http
+            .post("payments/create/json", &data, extra_headers)
+            .await
+    }
+
+    /// Fetch available payment methods and configurations (`GET /v1/methods`).
+    pub async fn methods(
+        &self,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<crate::models::PaymentMethods> {
+        self.http
+            .get::<crate::models::PaymentMethods, ()>("methods", None, extra_headers)
+            .await
+    }
+
     /// Capture an authorized payment (`POST /v1/payments/{payment_id}/capture`).
     pub async fn capture(
         &self,
@@ -45,6 +66,19 @@ impl Payments {
         self.http.post(&path, &data, extra_headers).await
     }
 
+    /// Fetch a specific refund for a payment (`GET /v1/payments/{payment_id}/refunds/{refund_id}`).
+    pub async fn fetch_refund(
+        &self,
+        payment_id: &str,
+        refund_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Refund> {
+        let path = format!("payments/{}/refunds/{}", payment_id, refund_id);
+        self.http
+            .get::<Refund, ()>(&path, None, extra_headers)
+            .await
+    }
+
     /// Fetch all refunds for a specific payment (`GET /v1/payments/{payment_id}/refunds`).
     pub async fn refunds(
         &self,
@@ -56,6 +90,17 @@ impl Payments {
         self.http.get(&path, query.as_ref(), extra_headers).await
     }
 
+    /// Create split transfers on a payment (`POST /v1/payments/{payment_id}/transfers`).
+    pub async fn transfer(
+        &self,
+        payment_id: &str,
+        data: crate::models::TransferPaymentRequest,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<RazorpayList<Transfer>> {
+        let path = format!("payments/{}/transfers", payment_id);
+        self.http.post(&path, &data, extra_headers).await
+    }
+
     /// Fetch all transfers created for a specific payment (`GET /v1/payments/{payment_id}/transfers`).
     pub async fn transfers(
         &self,
@@ -65,6 +110,17 @@ impl Payments {
     ) -> RazorpayResult<RazorpayList<Transfer>> {
         let path = format!("payments/{}/transfers", payment_id);
         self.http.get(&path, query.as_ref(), extra_headers).await
+    }
+
+    /// Submit a payment action or OTP/PIN challenge (`POST /v1/payments/{payment_id}/action`).
+    pub async fn action(
+        &self,
+        payment_id: &str,
+        data: crate::models::PaymentActionRequest,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("payments/{}/action", payment_id);
+        self.http.post(&path, &data, extra_headers).await
     }
 
     /// Fetch card details of a payment (`GET /v1/payments/{payment_id}/card`).

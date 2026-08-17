@@ -52,6 +52,18 @@ impl Orders {
         let path = format!("orders/{}/fulfillment", order_id);
         self.http.post(&path, data, extra_headers).await
     }
+
+    /// View order details on Rzp view (`GET /v1/orders/{order_id}/view_rzp`).
+    pub async fn view_rzp(
+        &self,
+        order_id: &str,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        let path = format!("orders/{}/view_rzp", order_id);
+        self.http
+            .get::<serde_json::Value, ()>(&path, None, extra_headers)
+            .await
+    }
 }
 
 #[async_trait]
