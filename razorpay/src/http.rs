@@ -17,6 +17,7 @@ use crate::{
 pub(crate) struct Http {
     pub(crate) client: reqwest::Client,
     pub(crate) config: RazorpayConfig,
+    pub(crate) default_headers: HeaderMap,
 }
 
 impl fmt::Debug for Http {
@@ -86,11 +87,34 @@ pub(crate) enum ApiVersion {
 impl Http {
     pub(crate) fn new(config: RazorpayConfig) -> RazorpayResult<Self> {
         let client = reqwest::Client::builder().timeout(config.timeout).build()?;
-        Ok(Self { client, config })
+        Ok(Self {
+            client,
+            config,
+            default_headers: HeaderMap::new(),
+        })
     }
 
     pub(crate) fn with_client(config: RazorpayConfig, client: reqwest::Client) -> Self {
-        Self { client, config }
+        Self {
+            client,
+            config,
+            default_headers: HeaderMap::new(),
+        }
+    }
+
+    pub(crate) fn with_account_id(&self, account_id: &str) -> RazorpayResult<Self> {
+        let mut default_headers = self.default_headers.clone();
+        let header_value = reqwest::header::HeaderValue::from_str(account_id)
+            .map_err(|_| RazorpayError::InvalidInput("invalid account_id for header".into()))?;
+        default_headers.insert(
+            reqwest::header::HeaderName::from_static("x-razorpay-account"),
+            header_value,
+        );
+        Ok(Self {
+            client: self.client.clone(),
+            config: self.config.clone(),
+            default_headers,
+        })
     }
 
     pub(crate) fn build_versioned_url(
@@ -189,6 +213,9 @@ impl Http {
             .get(url)
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret));
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(q) = query {
             req = req.query(q);
         }
@@ -213,6 +240,9 @@ impl Http {
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
             .json(body);
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(headers) = extra_headers {
             req = req.headers(headers);
         }
@@ -234,6 +264,9 @@ impl Http {
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
             .json(body);
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(headers) = extra_headers {
             req = req.headers(headers);
         }
@@ -255,6 +288,9 @@ impl Http {
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
             .json(body);
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(headers) = extra_headers {
             req = req.headers(headers);
         }
@@ -274,6 +310,9 @@ impl Http {
             .delete(url)
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret));
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(headers) = extra_headers {
             req = req.headers(headers);
         }
@@ -295,6 +334,9 @@ impl Http {
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
             .multipart(form);
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(headers) = extra_headers {
             req = req.headers(headers);
         }
@@ -315,6 +357,9 @@ impl Http {
             .get(url)
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret));
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(q) = query {
             req = req.query(q);
         }
@@ -339,6 +384,9 @@ impl Http {
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
             .json(body);
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(headers) = extra_headers {
             req = req.headers(headers);
         }
@@ -360,6 +408,9 @@ impl Http {
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret))
             .json(body);
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(headers) = extra_headers {
             req = req.headers(headers);
         }
@@ -379,6 +430,9 @@ impl Http {
             .delete(url)
             .basic_auth(&self.config.key_id, Some(&self.config.key_secret));
 
+        if !self.default_headers.is_empty() {
+            req = req.headers(self.default_headers.clone());
+        }
         if let Some(headers) = extra_headers {
             req = req.headers(headers);
         }

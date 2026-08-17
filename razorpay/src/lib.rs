@@ -135,6 +135,8 @@
 //! }
 //! ```
 
+#![forbid(unsafe_code)]
+
 pub mod client;
 pub mod config;
 pub mod error;
@@ -149,9 +151,15 @@ pub use client::{RazorpayClient, RazorpayClientBuilder};
 pub use config::RazorpayConfig;
 pub use error::{RazorpayError, RazorpayResult};
 pub use resources::{
-    Accounts, Addons, Bills, Cards, CustomerTokens, Customers, Disputes, Documents, FundAccounts,
-    Iins, Invoices, Items, Orders, PaymentLinks, Payments, Payouts, Plans, Products, QrCodes,
-    Refunds, Settlements, Stakeholders, Subscriptions, Tokens, Transfers, VirtualAccounts,
-    Webhooks,
+    Accounts, Addons, Bills, Cards, CustomerTokens, Customers, Disputes, Documents,
+    FundAccountValidations, FundAccounts, Iins, Invoices, Items, Methods, Orders, PaymentLinks,
+    Payments, Payouts, Plans, Products, QrCodes, Refunds, Settlements, Stakeholders, Subscriptions,
+    Tokens, Transfers, VirtualAccounts, Webhooks,
 };
 pub use traits::{Creatable, Deletable, Fetchable, Listable, Updatable};
+pub use webhooks::{
+    PaymentLinkSignatureVerification, PaymentSignatureVerification,
+    SubscriptionPaymentSignatureVerification, parse_webhook_event, verify_and_parse_webhook,
+    verify_payment_link_signature, verify_payment_signature, verify_subscription_payment_signature,
+    verify_webhook_signature,
+};

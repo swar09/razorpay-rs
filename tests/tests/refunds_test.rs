@@ -44,8 +44,8 @@ async fn test_refunds_crud_operations() {
         created_at: 1600000000,
         batch_id: None,
         status: razorpay::models::RefundStatus::Processed,
-        speed_processed: RefundSpeed::Instant,
-        speed_requested: RefundSpeed::Instant,
+        speed_processed: Some(RefundSpeed::Instant),
+        speed_requested: Some(RefundSpeed::Instant),
     };
 
     // 1. Create Standalone Refund

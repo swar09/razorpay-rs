@@ -259,10 +259,11 @@ pub enum PaymentRefundStatus {
 }
 
 /// Payment method used by the customer.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum PaymentMethod {
     /// Credit or debit card.
+    #[default]
     Card,
     /// Internet banking.
     #[serde(rename = "netbanking")]
@@ -373,14 +374,17 @@ pub struct Payment {
     /// Associated invoice ID, if created against an invoice.
     pub invoice_id: Option<String>,
     /// Indicates if international payment method was used.
+    #[serde(default)]
     pub international: bool,
     /// Payment method used for the transaction.
     pub method: Option<PaymentMethod>,
     /// Total amount refunded back to the customer so far in smallest currency sub-units.
+    #[serde(default)]
     pub amount_refunded: u64,
     /// Refund status if any refund has been issued.
     pub refund_status: Option<PaymentRefundStatus>,
     /// Indicates if the payment has been captured.
+    #[serde(default)]
     pub captured: bool,
     /// Merchant transaction description.
     pub description: Option<String>,
@@ -505,9 +509,11 @@ pub struct Refund {
     /// Status of the refund.
     pub status: RefundStatus,
     /// Actual speed at which refund was processed by bank.
-    pub speed_processed: RefundSpeed,
+    #[serde(default)]
+    pub speed_processed: Option<RefundSpeed>,
     /// Speed tier requested when creating the refund.
-    pub speed_requested: RefundSpeed,
+    #[serde(default)]
+    pub speed_requested: Option<RefundSpeed>,
 }
 
 /// Request parameters to issue a refund via `POST /v1/refunds` or `POST /v1/payments/{id}/refund`.

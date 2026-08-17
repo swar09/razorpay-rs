@@ -20,8 +20,8 @@ pub struct RazorpayConfig {
     pub timeout: Duration,
 }
 
-impl fmt::Debug for RazorpayConfig {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Debug for RazorpayConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RazorpayConfig")
             .field("key_id", &self.key_id)
             .field("key_secret", &"[REDACTED]")

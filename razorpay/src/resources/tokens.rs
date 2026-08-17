@@ -5,8 +5,11 @@ use std::sync::Arc;
 use crate::{
     error::RazorpayResult,
     http::Http,
-    models::{DeleteResponse, ListOptions, RazorpayList, Token},
-    traits::{Deletable, Fetchable, Listable},
+    models::{
+        CreateTokenRequest, DeleteResponse, ListOptions, RazorpayList, ServiceProviderTokenRequest,
+        Token,
+    },
+    traits::{Creatable, Deletable, Fetchable, Listable},
 };
 
 /// Resource handle for Razorpay Tokens API endpoints (`/v1/tokens` and `/v1/customers/{customer_id}/tokens`).
@@ -18,6 +21,17 @@ pub struct Tokens {
 impl Tokens {
     pub(crate) fn new(http: Arc<Http>) -> Self {
         Self { http }
+    }
+
+    /// Create a service provider network token (`POST /v1/tokens/service_provider_tokens`).
+    pub async fn create_service_provider_token(
+        &self,
+        data: ServiceProviderTokenRequest,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<serde_json::Value> {
+        self.http
+            .post("tokens/service_provider_tokens", &data, extra_headers)
+            .await
     }
 
     /// Fetch a token for a specific customer (`GET /v1/customers/{customer_id}/tokens/{token_id}`).
@@ -51,6 +65,21 @@ impl Tokens {
     ) -> RazorpayResult<DeleteResponse> {
         let path = format!("customers/{}/tokens/{}", customer_id, token_id);
         self.http.delete(&path, extra_headers).await
+    }
+}
+
+#[async_trait]
+impl Creatable for Tokens {
+    type Request = CreateTokenRequest;
+    type Response = Token;
+
+    /// Create a new token (`POST /v1/tokens`).
+    async fn create(
+        &self,
+        data: Self::Request,
+        extra_headers: Option<HeaderMap>,
+    ) -> RazorpayResult<Self::Response> {
+        self.http.post("tokens", &data, extra_headers).await
     }
 }
 

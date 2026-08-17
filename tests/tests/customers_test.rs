@@ -157,4 +157,51 @@ async fn test_customers_crud_and_tokens() {
         .await
         .expect("Delete token should succeed");
     assert!(del_resp.deleted);
+
+    // 6. Direct Token Create via client.tokens().create()
+    Mock::given(method("POST"))
+        .and(path("/tokens"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&expected_token))
+        .mount(&mock_server)
+        .await;
+
+    let created_token = client
+        .tokens()
+        .create(
+            razorpay::models::CreateTokenRequest {
+                customer_id: Some("cust_100".to_string()),
+                method: "card".to_string(),
+                card: None,
+                auth_type: None,
+                notes: None,
+            },
+            None,
+        )
+        .await
+        .expect("Direct token create should succeed");
+    assert_eq!(created_token.id, "token_123");
+
+    // 7. Service Provider Token
+    Mock::given(method("POST"))
+        .and(path("/tokens/service_provider_tokens"))
+        .and(basic_auth("rzp_test_key", "test_secret"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "entity": "token",
+            "token": "tok_sp_123"
+        })))
+        .mount(&mock_server)
+        .await;
+
+    let sp_token = client
+        .tokens()
+        .create_service_provider_token(
+            razorpay::models::ServiceProviderTokenRequest {
+                params: std::collections::HashMap::new(),
+            },
+            None,
+        )
+        .await
+        .expect("Service provider token request should succeed");
+    assert_eq!(sp_token["token"], "tok_sp_123");
 }
